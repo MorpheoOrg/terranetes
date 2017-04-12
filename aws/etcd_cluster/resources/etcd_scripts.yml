@@ -1,0 +1,11 @@
+  - path: "/etcd_scripts/reconfigure_cluster.sh"
+    permissions: "0755"
+    owner: "root"
+    content: |
+${reconfigure_etcd_cluster_script}
+
+  - path: "/etcd_scripts/cleanup_cluster.sh"
+    permissions: "0755"
+    owner: "root"
+    content: |
+${cleanup_etcd_cluster_script}

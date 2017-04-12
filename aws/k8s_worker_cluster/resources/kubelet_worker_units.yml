@@ -1,0 +1,51 @@
+    - name: fleet.service
+      command: start
+
+    - name: k8s-create-tls-certs.service
+      command: start
+      content: |
+        [Unit]
+        Description=Generates a valid TLS certificate for our workers
+        Before=kubelet.service
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        Environment="HOME=/root"
+        ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/ssl
+        ExecStartPre=/bin/bash -c 'chmod 600 /etc/kubernetes/ssl/*.key'
+        ExecStartPre=/bin/bash -c 'chown root:root /etc/kubernetes/ssl/*.key'
+        ExecStart=/bin/bash -c "/run/generate_tls_assets_for_worker.sh $private_ipv4 $HOSTNAME"
+
+    - name: kubelet.service
+      command: start
+      content: |
+        [Unit]
+        Requires=flanneld.service
+        After=flanneld.service
+        [Service]
+        Environment="RKT_OPTS=--volume var-log,kind=host,source=/var/log --mount volume=var-log,target=/var/log --volume dns,kind=host,source=/etc/resolv.conf --mount volume=dns,target=/etc/resolv.conf"
+        Environment=KUBELET_VERSION=${hyperkube_tag}
+        ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+        ExecStart=/usr/lib/coreos/kubelet-wrapper \
+          --api-servers=${master_endpoint} \
+          --network-plugin-dir=/etc/kubernetes/cni/net.d \
+          --network-plugin="" \
+          --cloud-provider=aws \
+          --register-node=true \
+          --allow-privileged=true \
+          --node-labels=${node_labels} \
+          --pod-manifest-path=/etc/kubernetes/manifests \
+          --hostname-override=$private_ipv4 \
+          --healthz-bind-address=0.0.0.0 \
+          --healthz-port=10248 \
+          --kubeconfig=/etc/kubernetes/kubeconfig.yml \
+          --cluster-dns=${k8s_service_dns_ip} \
+          --cluster-domain=cluster.${cluster_name} \
+          --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+          --tls-private-key-file=/etc/kubernetes/ssl/worker.key \
+          --enable-custom-metrics=true
+
+        Restart=always
+        RestartSec=10
+        [Install]
+        WantedBy=multi-user.target

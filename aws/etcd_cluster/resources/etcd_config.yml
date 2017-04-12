@@ -1,0 +1,14 @@
+    # This is used only during cluster bootstrapping, etcd nodes can later join
+    # and leave the cluster using only internal processes
+  - path: "/etc/systemd/system/etcd-member.service.d/1-init.conf"
+    permissions: "0644"
+    owner: "root"
+    content: |
+      [Service]
+      Environment="ETCD_NAME=etcd_$private_ipv4"
+      Environment="ETCD_IMAGE_TAG=${etcd_version}"
+      Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
+      Environment="ETCD_ADVERTISE_CLIENT_URLS=http://$private_ipv4:2379"
+      Environment="ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380"
+      Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://$private_ipv4:2380"
+

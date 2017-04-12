@@ -1,0 +1,7 @@
+  # Cloud-config to bootstrap CoreOS embedding user config for ${username}
+  - name: ${username}
+    groups:
+      - sudo
+      - docker
+    ssh-authorized-keys:
+${public_keys}

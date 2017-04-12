@@ -1,0 +1,118 @@
+#cloud-config
+
+coreos:
+  units:
+    - name: pull-and-run-cloud-config-from-s3.service
+      command: start
+      content: |
+        [Unit]
+        Description=Downloads our full cloud-config from S3 and provisions CoreOS
+        Wants=network-online.target
+        After=network-online.target
+
+        [Service]
+        EnvironmentFile=/etc/environment
+        ExecStartPre=/run/pull-cloud-config-from-s3.sh ${iam_cloud_config_role} ${bucket_region} ${bucket} ${key}
+        ExecStart=/usr/bin/coreos-cloudinit --from-file /run/cloud-config.yml
+        RemainAfterExit=yes
+        Type=oneshot
+
+write_files:
+  - path: "/run/pull-cloud-config-from-s3.sh"
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+
+      #
+      # Downloads the cloud-config from a given S3 bucket under a given S3 key.
+      # The tricky part is that we don't have (neither wish to install) the AWS CLI
+      # on CoreOS. Digging a bit into EC2's internals, it's possible to do everything
+      # by curling 169.x.x.x IPs and parsing reponses using good old bash tricks.
+      #
+      # Variables to pass from terraform: bucket, key, iam_cloud_config_role, bucket_region
+      #
+      # I'm definitely not proud of this piece of code, please don't judge.
+      #
+      # Maintainer: Etienne Lafarge <etienne@rythm.co>
+      #
+
+      # Get our current instance IAM profile (the one that should have access to our S3 VPC endpoint)
+
+      # 0. Let's fetch our AWS credentials, the redneck way
+      instance_creds="$(curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/${iam_cloud_config_role})"
+
+      s3_token="$(jq -r '.Token' <<< "$instance_creds")"
+      s3_access_key_id="$(jq -r '.AccessKeyId' <<< "$instance_creds")"
+      s3_secret_access_key="$(jq -r '.SecretAccessKey' <<< "$instance_creds")"
+
+      # In case we need the region: sed 's/.$//g' <<< $(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
+
+      echo "Got credentials for role ${iam_cloud_config_role}: "
+      echo "  ACCESS_KEY_ID:     $s3_access_key_id"
+      echo "  SECRET_ACCESS_KEY: $s3_secret_access_key"
+      echo "  TOKEN:             $s3_token"
+
+      # 1. Let's put our request parameters in Shell variables
+      date_short=$(date -u +'%Y%m%d')
+      date_long=$(date -u +'%Y%m%dT%H%M%SZ')
+
+      http_method='GET'
+      auth_type='AWS4-HMAC-SHA256'
+      service='s3'
+      base_url=".$service-${bucket_region}.amazonaws.com"
+
+      header_list='host;x-amz-content-sha256;x-amz-date;x-amz-security-token'
+
+      empty_string_hash=$(printf "" | openssl sha256 -hex 2>/dev/null | sed 's/^.* //')
+
+      # 2. Let's build our canonical request
+      canonical_request="GET
+      /${key}
+
+      host:${bucket}$base_url
+      x-amz-content-sha256:$empty_string_hash
+      x-amz-date:$date_long
+      x-amz-security-token:$s3_token
+
+      $header_list
+      $empty_string_hash"
+
+      canonical_request_hash=$(printf '%s' "$canonical_request" | openssl sha256 -hex 2>/dev/null | sed 's/^.* //')
+
+      echo "Prepared canonical request with hash \"$canonical_request_hash\": "
+      printf "$canonical_request\n"
+
+      # 3. Let's construct the signature S3 is asking for
+      string_to_be_signed="$auth_type
+      $date_long
+      $date_short/${bucket_region}/$service/aws4_request
+      $canonical_request_hash"
+
+      awsStringSign4() {
+         local k_secret k_date k_region k_service k_signing signed_string
+         k_secret="AWS4$1"
+         k_date=$(printf         '%s' "$2" | openssl dgst -hex -sha256 -mac HMAC -macopt "key:$k_secret"     2>/dev/null | sed 's/^.* //')
+         k_region=$(printf       '%s' "$3" | openssl dgst -hex -sha256 -mac HMAC -macopt "hexkey:$k_date"    2>/dev/null | sed 's/^.* //')
+         k_service=$(printf      '%s' "$4" | openssl dgst -hex -sha256 -mac HMAC -macopt "hexkey:$k_region"  2>/dev/null | sed 's/^.* //')
+         k_signing=$(printf 'aws4_request' | openssl dgst -hex -sha256 -mac HMAC -macopt "hexkey:$k_service" 2>/dev/null | sed 's/^.* //')
+         signed_string=$(printf  '%s' "$5" | openssl dgst -hex -sha256 -mac HMAC -macopt "hexkey:$k_signing" 2>/dev/null | sed 's/^.* //')
+         printf '%s' "$signed_string"
+      }
+
+      signature=$(awsStringSign4 "$s3_secret_access_key" "$date_short" "${bucket_region}" "$service" "$string_to_be_signed")
+
+      echo "Computed signature $signature for string:"
+      echo -n "$string_to_be_signed"
+
+      curl -v -L -s --proto-redir =https -X "$http_method" \
+        -H "Host: ${bucket}$base_url" \
+        -H "Authorization: $auth_type Credential=$s3_access_key_id/$date_short/${bucket_region}/$service/aws4_request, SignedHeaders=$header_list, Signature=$signature" \
+        -H "X-Amz-Date: $date_long" \
+        -H "X-Amz-Content-SHA256: $empty_string_hash" \
+        -H "X-Amz-Security-Token: $s3_token" \
+        "https://${bucket}$base_url/${key}" \
+        | sed "s/\\$private_ipv4/$private_ipv4/g; s/\\$public_ipv4/$public_ipv4/g" \
+        > /run/cloud-config.yml
+
+      echo "Downloaded file /run/cloud-config.yml from bucket ${bucket}/${key}"
+      echo "Let's now apply the downloaded cloud-config"

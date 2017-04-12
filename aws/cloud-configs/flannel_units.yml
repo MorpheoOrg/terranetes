@@ -1,0 +1,17 @@
+    - name: flanneld.service
+      command: start
+      drop-ins:
+        - name: 50-network-config.conf
+          content: |
+            [Service]
+            Environment="RKT_OPTS=--volume=resolv,kind=host,source=/etc/resolv.conf --mount volume=resolv,target=/etc/resolv.conf"
+            ExecStartPre=/usr/bin/etcdctl --endpoints=${etcd_endpoint} set /coreos.com/network/config '{"Network":"10.${k8s_network_prefix}.0.0/16", "Backend": {"Type": "vxlan"}}'
+
+    - name: docker.service
+      command: start
+      drop-ins:
+        - name: 40-flannel.conf
+          content: |
+            [Unit]
+            Requires=flanneld.service
+            After=flanneld.service

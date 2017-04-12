@@ -1,0 +1,77 @@
+  - path: /run/generate_tls_assets_for_worker.sh
+    permissions: '0755'
+    owner: root
+    content: |
+${generate_tls_assets_for_worker_script}
+
+  - path: /etc/kubernetes/manifests/kube-proxy.yaml
+    permissions: '0644'
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: kube-proxy
+        namespace: kube-system
+      spec:
+        hostNetwork: true
+        containers:
+          - name: kube-proxy
+            image: quay.io/coreos/hyperkube:${hyperkube_tag}
+            command:
+              - /hyperkube
+              - proxy
+              - --master=${master_endpoint}
+              - --kubeconfig=/etc/kubernetes/kubeconfig.yml
+              - --proxy-mode=iptables
+            securityContext:
+              privileged: true
+            volumeMounts:
+              - mountPath: /etc/ssl/certs
+                name: ssl-certs
+              - mountPath: /etc/kubernetes/kubeconfig.yml
+                name: kubeconfig
+                readOnly: true
+              - mountPath: /etc/kubernetes/ssl
+                name: etc-kube-ssl
+                readOnly: true
+        volumes:
+          - name: ssl-certs
+            hostPath:
+              path: /usr/share/ca-certificates
+          - name: kubeconfig
+            hostPath:
+              path: /etc/kubernetes/kubeconfig.yml
+          - name: etc-kube-ssl
+            hostPath:
+              path: /etc/kubernetes/ssl
+
+  - path: /etc/kubernetes/kubeconfig.yml
+    permissions: '0644'
+    content: |
+      apiVersion: v1
+      clusters:
+        - cluster:
+            certificate-authority: /etc/kubernetes/ssl/ca.pem
+          name: ${cluster_name}
+      users:
+        - name: kubelet
+          user:
+            client-certificate: /etc/kubernetes/ssl/worker.pem
+            client-key: /etc/kubernetes/ssl/worker.key
+      contexts:
+        - context:
+            cluster: ${cluster_name}
+            user: kubelet
+          name: kubelet-context
+      current-context: kubelet-context
+
+  # The good old SSL certs
+  - path: /etc/kubernetes/ssl/ca.key
+    permissions: '0600'
+    content: |
+${k8s_tls_cakey}
+
+  - path: /etc/kubernetes/ssl/ca.pem
+    permissions: '0600'
+    content: |
+${k8s_tls_cacert}

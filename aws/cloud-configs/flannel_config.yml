@@ -1,0 +1,3 @@
+  flannel:
+    interface: $private_ipv4
+    etcd-endpoints: ${etcd_endpoint}

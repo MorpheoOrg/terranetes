@@ -1,0 +1,29 @@
+    # Looks for dead nodes in the etcd cluster and removes them. This is
+    # essential not to break the consensus process (dead nodes don't vote so
+    # they shouldn't count when computing the majority)
+    - name: etcd-cluster-cleanup.service
+      command: start
+      content: |
+        [Unit]
+        Description=Removes dead nodes from etcd cluster
+        Before=etcd-cluster-reconfiguration.service
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/bin/bash /etcd_scripts/cleanup_cluster.sh "${etcd_endpoint}"
+
+    # Registers our current node against the etcd cluster by calling etcdctl
+    # member add and by formatting ( <3 sed <3 ) and pasting its output in a
+    # systemd additionnal unit config for etcd2 so that it discovers the cluster
+    # as soon as etcd2 is started
+    - name: etcd-cluster-reconfiguration.service
+      command: start
+      content: |
+        [Unit]
+        Description=Registers current node on pre-existing etcd cluster
+        Before=etcd-member.service
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStartPre=/usr/bin/rm -rf /var/lib/etcd/*
+        ExecStart=/bin/bash /etcd_scripts/reconfigure_cluster.sh "${etcd_version}" "${etcd_endpoint}" "$private_ipv4"

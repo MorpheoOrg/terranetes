@@ -1,0 +1,5 @@
+  - path: /etcd_scripts/configure_etcd_proxy.sh
+    permissions: "0755"
+    owner: "root"
+    content: |
+${configure_etcd_proxy_script}

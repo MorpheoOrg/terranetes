@@ -1,0 +1,34 @@
+    - name: fleet.service
+      command: start
+
+    - name: kubelet.service
+      command: start
+      content: |
+        [Unit]
+        Requires=flanneld.service
+        After=flanneld.service
+        Requires=etcd-member.service
+        After=etcd-member.service
+        [Service]
+        Environment="RKT_OPTS=--volume=resolv,kind=host,source=/etc/resolv.conf --mount volume=resolv,target=/etc/resolv.conf"
+        Environment=KUBELET_IMAGE_TAG=${hyperkube_tag}
+        ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+        ExecStartPre=/usr/bin/mkdir -p /var/log/containers
+        ExecStart=/usr/lib/coreos/kubelet-wrapper \
+          --api-servers=http://127.0.0.1:8080 \
+          --network-plugin-dir=/etc/kubernetes/cni/net.d \
+          --network-plugin="" \
+          --cloud-provider=aws \
+          --register-schedulable=false \
+          --allow-privileged=true \
+          --node-labels=role.node=k8s_master \
+          --pod-manifest-path=/etc/kubernetes/manifests \
+          --hostname-override=$private_ipv4 \
+          --healthz-bind-address=0.0.0.0 \
+          --healthz-port=10248 \
+          --cluster-dns=${k8s_service_dns_ip} \
+          --cluster-domain=cluster.${cluster_name}
+        Restart=always
+        RestartSec=10
+        [Install]
+        WantedBy=multi-user.target
