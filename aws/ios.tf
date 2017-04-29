@@ -9,71 +9,77 @@
 
 variable "vpc_region" {
   description = "The AWS region to create your Kubernetes cluster into."
-  type = "string"
+  type        = "string"
 }
 
 variable "vpc_name" {
   description = "Arbitrary name to give to your VPC"
-  type = "string"
+  type        = "string"
 }
 
 variable "vpc_number" {
   description = "The VPC number. This will define the VPC IP range in CIDR notation as follows: 10.<vpc_number>.0.0/16"
-  type = "string"
+  type        = "string"
 }
 
 variable "cluster_name" {
   description = "The name of the Kubernetes cluster to create (necessary when federating clusters)."
-  type = "string"
+  type        = "string"
 }
 
 variable "usernames" {
   description = "A list of usernames that will be able to SSH onto your instances through the bastion host."
-  type = "list"
-  default = []
+  type        = "list"
+  default     = []
 }
 
 variable "userkeys" {
   description = "The list of SSH keys your users will use (must appear in the same order as the one defined by the \"usernames\" variable)."
-  type = "list"
-  default = []
+  type        = "list"
+  default     = []
 }
 
 variable "bastion_ssh_port" {
   description = "The port to use to SSH onto your bastion host (avoid using 22 or 2222, a lot of bots are keeping on trying to scan this ports with random usernames and passwords and it tends to fill the SSHD logs a bit too much sometimes...)"
-  type = "string"
+  type        = "string"
 }
 
 variable "terraform_ssh_key_path" {
   description = "Local path to the SSH key terraform will use to bootstrap your etcd cluster and tunnel to the Kubernetes UI."
-  type = "string"
+  type        = "string"
 }
 
 variable "trusted_cidrs" {
   description = "A list of CIDRs that will be allowed to connect to the SSH port defined by \"bastion_ssh_port\"."
-  type = "list"
+  type        = "list"
 }
 
 variable "coreos_ami_owner_id" {
   description = "The ID of the owner of the CoreOS image you want to use on the AWS marketplace (or yours if you're using your own AMI)."
-  default = "595879546273"
-  type = "string"
+  default     = "595879546273"
+  type        = "string"
 }
+
 variable "coreos_ami_pattern" {
   description = "The AMI pattern to use (it can be a full name or contain wildcards, default to the last release of CoreOS on the stable channel)."
-  default = "CoreOS-stable-*"
-  type = "string"
+  default     = "CoreOS-stable-*"
+  type        = "string"
+}
+
+variable "virtualization_type" {
+  type        = "string"
+  default     = "hvm"
+  description = "The AWS virtualization type to use (hvm or pv)"
 }
 
 variable "cloud_config_bucket" {
   description = "The name of the bucket in which to store your instances cloud-config files."
-  type = "string"
+  type        = "string"
 }
 
 variable "internal_domain" {
   description = "The internal domain name suffix to be atted to your etcd & k8s master ELBs (ex. company.int)"
-  type = "string"
-
+  type        = "string"
 }
 
 variable "etcd_version" {
@@ -83,14 +89,14 @@ variable "etcd_version" {
 
 variable "etcd_instance_type" {
   description = "The EC2 instance type to use for etcd nodes."
-  default = "t2.nano"
-  type = "string"
+  default     = "t2.micro"
+  type        = "string"
 }
 
 variable "etcd_instance_count" {
   description = "The number of etcd nodes to use (at least 3 is recommended)."
-  type = "string"
-  default = 3
+  type        = "string"
+  default     = 3
 }
 
 variable "hyperkube_tag" {
@@ -100,58 +106,58 @@ variable "hyperkube_tag" {
 
 variable "k8s_master_instance_type" {
   description = "The EC2 instance type to use for Kubernetes master nodes."
-  default = "t2.micro"
-  type = "string"
+  default     = "t2.micro"
+  type        = "string"
 }
 
 variable "k8s_master_instance_count" {
   description = "The number of Kubernetes nodes to run (2 is recommended)."
-  type = "string"
-  default = 2
+  type        = "string"
+  default     = 2
 }
 
 variable "k8s_master_disk_size" {
   description = "The disk size for Kubernetes master nodes (in GB)"
-  type = "string"
-  default = "16"
+  type        = "string"
+  default     = "16"
 }
 
 variable "k8s_tls_cakey" {
   description = "The private key of the CA signing kubernetes API & worker certs"
-  type = "string"
+  type        = "string"
 }
 
 variable "k8s_tls_cacert" {
   description = "The public key the CA signing kubernetes API & worker certs"
-  type = "string"
+  type        = "string"
 }
 
 variable "k8s_tls_apikey" {
   description = "The private key of the Kubernetes APIServer"
-  type = "string"
+  type        = "string"
 }
 
 variable "k8s_tls_apicert" {
   description = "The public key of the Kubernetes APIServer"
-  type = "string"
+  type        = "string"
 }
 
 variable "bastion_extra_units" {
   description = "Extra unit files (don't forget the 4-space indentation) to run on the bastion host"
-  type = "list"
-  default = []
+  type        = "list"
+  default     = []
 }
 
 variable "etcd_extra_units" {
   description = "Extra unit files (don't forget the 4-space indentation) to run on the etcd nodes"
-  type = "list"
-  default = []
+  type        = "list"
+  default     = []
 }
 
 variable "etcd_extra_files" {
   description = "Extra files (don't forget the 2-space indentation) to be put on the etcd nodes"
-  type = "list"
-  default = []
+  type        = "list"
+  default     = []
 }
 
 output "vpc_id" {

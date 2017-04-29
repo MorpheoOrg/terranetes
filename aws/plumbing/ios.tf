@@ -25,34 +25,41 @@ variable "vpc_region" {
 
 variable "cluster_name" {
   description = "The name of the Kubernetes cluster to create (necessary when federating clusters)."
-  type = "string"
+  type        = "string"
 }
 
 variable "usernames" {
   description = "A list of usernames that will be able to SSH onto your instances through the bastion host."
-  type = "list"
+  type        = "list"
 }
 
 variable "userkeys" {
   description = "The list of SSH keys your users will use (must appear in the same order as the one defined by the \"usernames\" variable)."
-  type = "list"
+  type        = "list"
 }
 
 variable "bastion_ssh_port" {
   description = "The port to use to SSH onto your bastion host (avoid using 22 or 2222, a lot of bots are keeping on trying to scan this ports with random usernames and passwords and it tends to fill the SSHD logs a bit too much sometimes...)"
-  type = "string"
+  type        = "string"
 }
 
 variable "trusted_cidrs" {
   description = "A list of CIDRs that will be allowed to connect to the SSH port defined by \"bastion_ssh_port\"."
-  type = "list"
+  type        = "list"
 }
 
 variable "coreos_ami_owner_id" {
   description = "The ID of the owner of the CoreOS image you want to use on the AWS marketplace (or yours if you're using your own AMI)."
 }
+
 variable "coreos_ami_pattern" {
   description = "The AMI pattern to use (it can be a full name or contain wildcards, default to the last release of CoreOS on the stable channel)."
+}
+
+variable "virtualization_type" {
+  type        = "string"
+  default     = "hvm"
+  description = "The AWS virtualization type to use (hvm or pv)"
 }
 
 variable "cloud_config_bucket" {
@@ -65,8 +72,8 @@ variable "internal_domain" {
 
 variable "bastion_extra_units" {
   description = "Extra unit files (don't forget the 4-space indentation) to run on the bastion host"
-  type = "list"
-  default = []
+  type        = "list"
+  default     = []
 }
 
 output "vpc_id" {

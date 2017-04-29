@@ -39,6 +39,7 @@ module "foundations" {
   trusted_cidrs       = ["${var.trusted_cidrs}"]
   coreos_ami_owner_id = "${var.coreos_ami_owner_id}"
   coreos_ami_pattern  = "${var.coreos_ami_pattern}"
+  virtualization_type = "${var.virtualization_type}"
   cloud_config_bucket = "${var.cloud_config_bucket}"
   internal_domain     = "${var.internal_domain}"
   bastion_extra_units = ["${var.bastion_extra_units}"]

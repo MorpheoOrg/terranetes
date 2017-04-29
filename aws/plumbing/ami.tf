@@ -33,15 +33,10 @@ data "aws_ami" "coreos_stable" {
     values = ["${var.coreos_ami_pattern}"]
   }
 
-  owners = ["${var.coreos_ami_owner_id}"]
-}
-
-# An AMI for a good (and cheap) NAT device
-data "aws_ami" "nat_os" {
-  most_recent = true
-
   filter {
-    name   = "name"
-    values = ["amzn-ami-vpc-nat-*"]
+    name   = "virtualization-type"
+    values = ["${var.virtualization_type}"]
   }
+
+  owners = ["${var.coreos_ami_owner_id}"]
 }
