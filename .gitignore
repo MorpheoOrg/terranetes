@@ -19,3 +19,6 @@ tags
 
 # Module directory
 .terraform/
+
+# TLS assets for tests
+tests/tls

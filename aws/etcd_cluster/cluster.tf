@@ -27,16 +27,16 @@ resource "aws_elb" "etcd" {
 
   listener {
     instance_port     = 2379
-    instance_protocol = "http"
+    instance_protocol = "tcp"
     lb_port           = 2379
-    lb_protocol       = "http"
+    lb_protocol       = "tcp"
   }
 
   listener {
     instance_port     = 2380
-    instance_protocol = "http"
+    instance_protocol = "tcp"
     lb_port           = 2380
-    lb_protocol       = "http"
+    lb_protocol       = "tcp"
   }
 
   health_check {
