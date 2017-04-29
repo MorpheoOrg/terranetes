@@ -21,9 +21,6 @@ ASG_NAME="$5"
 ASG_MIN_SIZE="$6"
 MODULE_PATH="$7"
 
-# TODO FIXME eeerk: let's rather get the status from the EC2 API to make sure the instances are ready for SSH
-sleep 100s
-
 echo " ((((())))) Let me wait for the auto-scaling group instances to be up and running..."
 instance_ids_json=$(aws autoscaling describe-auto-scaling-groups \
     --auto-scaling-group-names "$ASG_NAME" \
@@ -57,8 +54,19 @@ for ip in "${ip_addresses[@]}"; do
 done
 initial_cluster=$(sed 's/^.//' <<< "$initial_cluster")
 
+echo " ((((())))) 0o0o >>> Sleeping for 30 seconds (the time to be sure that our cloud config has been applied)"
+sleep 30s
+
+# TODO FIXME(etienne): reduce code duplication below
+# Stopping etcd on all nodes
 for ip in "${ip_addresses[@]}"; do
-  echo " ((((())))) 0o0o >>> Copying bootstrapping configuration to node $ip"
+  echo " ((((())))) 0o0o >>> Stopping etcd on node $ip"
+  ssh -i "$PRIVATE_SSH_KEY_PATH" -oStrictHostKeyChecking=no -oProxyCommand="ssh -p $SSH_PORT -i $PRIVATE_SSH_KEY_PATH -oStrictHostKeyChecking=no -q -W %h:%p terraform@$BASTION_IP" "terraform@$ip" sudo systemctl stop etcd-member.service
+done
+
+# Copying bootstrap configuration on all nodes
+for ip in "${ip_addresses[@]}"; do
+  echo " ((((())))) 0o0o >>> Copying bootstraping configuration to node $ip, reloading systemd config and cleaning up etcd data dir"
   cat <<EOF  > "$MODULE_PATH/resources/100-etcd-bootstrap.conf"
 [Service]
 # Initial cluster configuration
@@ -67,22 +75,32 @@ Environment=ETCD_INITIAL_CLUSTER=$initial_cluster
 EOF
   scp -i "$PRIVATE_SSH_KEY_PATH" -oStrictHostKeyChecking=no -oProxyCommand="ssh -p $SSH_PORT -i $PRIVATE_SSH_KEY_PATH -oStrictHostKeyChecking=no -q -W %h:%p terraform@$BASTION_IP" "$MODULE_PATH/resources/100-etcd-bootstrap.conf" "terraform@${ip}:100-etcd-bootstrap.conf"
   ssh -i "$PRIVATE_SSH_KEY_PATH" -oStrictHostKeyChecking=no -oProxyCommand="ssh -p $SSH_PORT -i $PRIVATE_SSH_KEY_PATH -oStrictHostKeyChecking=no -q -W %h:%p terraform@$BASTION_IP" "terraform@$ip" sudo mkdir -p /etc/systemd/system/etcd-member.service.d/
-  ssh -i "$PRIVATE_SSH_KEY_PATH" -oStrictHostKeyChecking=no -oProxyCommand="ssh -p $SSH_PORT -i $PRIVATE_SSH_KEY_PATH -oStrictHostKeyChecking=no -q -W %h:%p terraform@$BASTION_IP" "terraform@$ip" sudo systemctl stop etcd-member.service
   ssh -i "$PRIVATE_SSH_KEY_PATH" -oStrictHostKeyChecking=no -oProxyCommand="ssh -p $SSH_PORT -i $PRIVATE_SSH_KEY_PATH -oStrictHostKeyChecking=no -q -W %h:%p terraform@$BASTION_IP" "terraform@$ip" sudo mv /home/terraform/100-etcd-bootstrap.conf /etc/systemd/system/etcd-member.service.d/100-etcd-bootstrap.conf
 
-  echo " ((((())))) o0o0 >>> Starting etcd on node N $ip"
   ssh -i "$PRIVATE_SSH_KEY_PATH" -oStrictHostKeyChecking=no -oProxyCommand="ssh -p $SSH_PORT -i $PRIVATE_SSH_KEY_PATH -oStrictHostKeyChecking=no -q -W %h:%p terraform@$BASTION_IP" "terraform@$ip" sudo systemctl daemon-reload
   ssh -i "$PRIVATE_SSH_KEY_PATH" -oStrictHostKeyChecking=no -oProxyCommand="ssh -p $SSH_PORT -i $PRIVATE_SSH_KEY_PATH -oStrictHostKeyChecking=no -q -W %h:%p terraform@$BASTION_IP" "terraform@$ip" sudo rm -rf /var/lib/etcd/*
-  ssh -i "$PRIVATE_SSH_KEY_PATH" -oStrictHostKeyChecking=no -oProxyCommand="ssh -p $SSH_PORT -i $PRIVATE_SSH_KEY_PATH -oStrictHostKeyChecking=no -q -W %h:%p terraform@$BASTION_IP" "terraform@$ip" sudo systemctl start etcd-member.service &
-  ssh -i "$PRIVATE_SSH_KEY_PATH" -oStrictHostKeyChecking=no -oProxyCommand="ssh -p $SSH_PORT -i $PRIVATE_SSH_KEY_PATH -oStrictHostKeyChecking=no -q -W %h:%p terraform@$BASTION_IP" "terraform@$ip" sudo rm -f /etc/systemd/system/etcd-member.service.d/100-etcd-bootstrap.conf
+done
 
-  # Never forget to clean up behind you ;-)
-  rm -f "$MODULE_PATH/resources/100-etcd-bootstrap.conf"
+# Starting etcd on all nodes
+for ip in "${ip_addresses[@]}"; do
+  echo " ((((())))) o0o0 >>> Starting etcd on node N $ip"
+  ssh -i "$PRIVATE_SSH_KEY_PATH" -oStrictHostKeyChecking=no -oProxyCommand="ssh -p $SSH_PORT -i $PRIVATE_SSH_KEY_PATH -oStrictHostKeyChecking=no -q -W %h:%p terraform@$BASTION_IP" "terraform@$ip" sudo systemctl start etcd-member.service &
 done
 
 # Wait for the 3 etcd nodes to form a cluster (cf. the systemd start commands
 # ran above in the background)
+echo "((((())))) o0o0 >>> Waiting for the 3 etcd nodes (${ip_addresses}) to start and form a cluster..."
 wait
+echo "((((())))) o0o0 >>> All three nodes should be ready now."
+
+for ip in "${ip_addresses[@]}"; do
+  echo " ((((())))) o0o0 >>> Removing bootstrap specific systemd drop-in on node $ip and make ELB health check succeed so that our cluster can be reached"
+  ssh -i "$PRIVATE_SSH_KEY_PATH" -oStrictHostKeyChecking=no -oProxyCommand="ssh -p $SSH_PORT -i $PRIVATE_SSH_KEY_PATH -oStrictHostKeyChecking=no -q -W %h:%p terraform@$BASTION_IP" "terraform@$ip" sudo rm -f /etc/systemd/system/etcd-member.service.d/100-etcd-bootstrap.conf
+  ssh -i "$PRIVATE_SSH_KEY_PATH" -oStrictHostKeyChecking=no -oProxyCommand="ssh -p $SSH_PORT -i $PRIVATE_SSH_KEY_PATH -oStrictHostKeyChecking=no -q -W %h:%p terraform@$BASTION_IP" "terraform@$ip" etcdctl set letsdreem true
+
+  # Never forget to clean up behind you ;-)
+  rm -f "$MODULE_PATH/resources/100-etcd-bootstrap.conf"
+done
 
 echo " ((((())))) [GREAT SUCCESS] ETCD BOOTSTRAP COMPLETE AND SUCCESSFUL, HAVE FUN ! "
 

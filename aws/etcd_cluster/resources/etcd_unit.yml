@@ -1,2 +1,8 @@
     - name: etcd-member.service
       command: start
+      drop-ins:
+        - name: 0-dependencies.conf
+          content: |
+            [Unit]
+            After=etcd-cluster-reconfiguration.service
+            Requires=etcd-cluster-reconfiguration.service

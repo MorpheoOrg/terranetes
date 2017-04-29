@@ -6,7 +6,6 @@
       content: |
         [Unit]
         Description=Removes dead nodes from etcd cluster
-        Before=etcd-cluster-reconfiguration.service
         [Service]
         Type=oneshot
         RemainAfterExit=yes
@@ -21,7 +20,8 @@
       content: |
         [Unit]
         Description=Registers current node on pre-existing etcd cluster
-        Before=etcd-member.service
+        After=etcd-cluster-cleanup.service
+        Requires=etcd-cluster-cleanup.service
         [Service]
         Type=oneshot
         RemainAfterExit=yes

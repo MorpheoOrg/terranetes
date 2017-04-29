@@ -91,6 +91,10 @@ of your infrastructure seems a bit... risky, if you know what I mean :)
 ### 4 (Optional) - Safely route your traffic through ingress controllers
 
 TODO
+Mention the use of ALB for the best of HTTP/2.0 & websocket proxying.
+But also talk about simply using TCP proxying (in case one doesn't need the
+X-Proxy headers to fetch, for instance, the original client IPs)
+Simple service for pure TCP endpoints
 
 #### Why it is essential if you want to avoid 5xx errors at all cost
 

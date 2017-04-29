@@ -14,6 +14,14 @@
       ETCD_ENDPOINT="$2"
       IP="$3"
 
+      etcdctl --endpoints="${ETCD_ENDPOINT}" cluster-health
+      cluster_health="$?"
+
+      if [[ "$cluster_health" -ne 0 ]]; then
+        echo "Cluster seems to be unhealthy, starting etcd and hoping for a bootstrap anyways..."
+        exit 0
+      fi
+
       # Let's build the etcdctl command accordingly
       cluster_config="$(etcdctl --endpoints="${ETCD_ENDPOINT}" member list)"
       etcd_endpoints="$(awk '{print $4}' <<< "$cluster_config" | sed 's/clientURLs=http:\/\///g' | tr '\n' ','| rev | cut -c 2- | rev)"
@@ -21,8 +29,6 @@
 
       cluster_conf="$($etcdctl_cmd member add --peer-urls="http://$IP:2380" "etcd_$IP")"
       cluster_available="$?"
-
-      rm -rf /var/lib/etcd/*
 
       if [[ "$cluster_available" -eq 0 ]]; then
         # If we found a cluster and managed to add the current node onto it, let's
