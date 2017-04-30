@@ -40,10 +40,10 @@ resource "aws_elb" "etcd" {
   }
 
   health_check {
-    healthy_threshold   = 3
+    healthy_threshold   = 2
     unhealthy_threshold = 2
     timeout             = 4
-    target              = "HTTP:2379/v2/keys/letsdreem"
+    target              = "HTTP:2379/v2/keys/${var.etcd_health_key}"
     interval            = 5
   }
 
@@ -61,6 +61,9 @@ resource "aws_autoscaling_group" "etcd" {
   max_size = "${var.etcd_instance_count + 1}"
   min_size = "${var.etcd_instance_count}"
 
+  health_check_type         = "${var.etcd_asg_health_check_type}"
+  health_check_grace_period = "600"
+
   termination_policies = ["OldestLaunchConfiguration", "ClosestToNextInstanceHour"]
   force_delete         = true
 
@@ -77,7 +80,7 @@ resource "aws_autoscaling_group" "etcd" {
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/resources/bootstrap_etcd_cluster.sh ${var.vpc_region} ${var.terraform_ssh_key_path} ${var.bastion_ip} ${var.bastion_ssh_port} ${self.name} ${self.min_size} ${path.module}"
+    command = "${path.module}/resources/bootstrap_etcd_cluster.sh ${var.vpc_region} ${var.terraform_ssh_key_path} ${var.bastion_ip} ${var.bastion_ssh_port} ${self.name} ${self.min_size} ${path.module} http://${aws_route53_record.etcd_internal.name}:2379 ${var.etcd_health_key}"
   }
 }
 
@@ -97,7 +100,6 @@ resource "aws_launch_configuration" "etcd" {
   root_block_device {
     volume_type = "gp2"
 
-    # TODO: put that in a variable
     volume_size           = 8
     delete_on_termination = true
   }
@@ -119,9 +121,8 @@ resource "aws_route53_record" "etcd_internal" {
 }
 
 # A hook we can use to make sure all the cluster's components are up from other
-# pieces of Terraform code, in our case, the Kubernetes master needs to wait for
-# etcd to be ready. TODO: retry to create all resources without this exlicit
-# (and hacky) dependency and have everything that can be spawned in parrallel.
+# pieces of Terraform code, in our case, all non etcd-nodes & the bastion host
+# need to have etcd available to correctly setup the flannel network overlay.
 resource "null_resource" "dependency_hook" {
   depends_on = ["aws_route53_record.etcd_internal", "aws_autoscaling_group.etcd"]
 }

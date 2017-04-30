@@ -51,6 +51,18 @@ variable "etcd_instance_count" {
   default     = 3
 }
 
+variable "etcd_asg_health_check_type" {
+  description = "\"EC2\" or \"ELB\". If ELB is chosen, nodes with an unhealthy etcd instance will be killed"
+  default     = "EC2"
+  type        = "string"
+}
+
+variable "etcd_health_key" {
+  description = "etcd key whose presence indicates that a node is healthy"
+  default     = "etcd_cluster_healthy"
+  type        = "string"
+}
+
 variable "private_subnet_ids" {
   description = "The ids of public subnets to spread the etcd cluster accross)."
   type        = "list"

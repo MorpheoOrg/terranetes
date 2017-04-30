@@ -26,6 +26,8 @@ if [[ ! -f ~/.ssh/terraform || ! -f ~/.ssh/terraform.pub  ]]; then
   exit 3
 fi
 
+echo "[INFO] Checking for presence of terraform SSH keypair in ~/.ssh/"
+
 printf "\n"
 
 case "$1" in
@@ -35,9 +37,6 @@ case "$1" in
     external_ip="$(curl ipecho.net/plain; echo)"
     export TF_VAR_test_from_ip="${external_ip}"
 
-    # echo "[INFO] Let's generate TLS certs for our test infrastructure"
-    # rm -rf ./tls
-    # ../../aws/scripts/tls-gen.sh test-cluster terranetes.int 10.101.128.1
     echo "[INFO] Generating terraform plan"
     terraform get && terraform plan
     echo "[INFO] Applying plan... Hipster, go grab yourself some artisan Coffee"
@@ -58,16 +57,13 @@ case "$1" in
     # Running terraform destroy twice does the trick though
     terraform get && echo "yes" | terraform destroy
 
-    echo "[INFO] Removing TLS certs"
-    rm -rf ./tls
-
     exit 0
     ;;
 
   test)
     echo "[INFO] Running tests !!!!"
-
-    exit 0
+    ./test-suite.sh
+    exit "$?"
     ;;
 
   *)
