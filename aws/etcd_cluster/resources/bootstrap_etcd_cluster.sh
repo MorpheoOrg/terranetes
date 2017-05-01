@@ -105,6 +105,7 @@ echo " ((((())))) o0o0 >>> All three nodes should be ready now."
 for ip in "${ip_addresses[@]}"; do
   echo " ((((())))) o0o0 >>> Removing bootstrap specific systemd drop-in on node $ip"
   "${etcd_ssh_cmd[@]}" "terraform@$ip" sudo rm -f /etc/systemd/system/etcd-member.service.d/100-etcd-bootstrap.conf
+  "${etcd_ssh_cmd[@]}" "terraform@$ip" sudo systemctl daemon-reload
 
   # Never forget to clean up behind you ;-)
   rm -f "$MODULE_PATH/resources/100-etcd-bootstrap.conf"

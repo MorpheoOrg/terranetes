@@ -80,16 +80,16 @@ variable "test_coreos_ami_pattern" {
   type    = "string"
 }
 
-variable "test_hyperkube_image" {
-  default     = "v1.6.2_coreos.0"
-  type        = "string"
-  description = "Hyperkube image to use (fetched from quay.io: https://quay.io/repository/coreos/hyperkube?tab=tags)"
-}
-
 variable "test_etcd_version" {
   default     = "v3.1.5"
   type        = "string"
   description = "Etcd version to use"
+}
+
+variable "test_etcd_node_count" {
+  default     = "3"
+  type        = "string"
+  description = "Size of the test cluster"
 }
 
 ### IP allowed to SSH onto our test infrastructure ###

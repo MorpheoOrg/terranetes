@@ -4,10 +4,6 @@
  * shouldn't be the case. The auto-scaling group is mostly here to provide
  * multi-AZ redundancy out-of-the-box.
  *
- * TODO: remove the ELB and rather use the AWS golang API in a rkt-embedded
- * binary to fetch ETCD IPs from the ASG configuration and create the systemd
- * drop ins containing these IPs using that binary.
- *
  *        ---------------------------
  *
  *  Maintainer: Étienne Lafarge <etienne@rythm.co>
@@ -62,7 +58,8 @@ resource "aws_autoscaling_group" "etcd" {
   min_size = "${var.etcd_instance_count}"
 
   health_check_type         = "${var.etcd_asg_health_check_type}"
-  health_check_grace_period = "600"
+  health_check_grace_period = "300"
+  default_cooldown          = "30"
 
   termination_policies = ["OldestLaunchConfiguration", "ClosestToNextInstanceHour"]
   force_delete         = true

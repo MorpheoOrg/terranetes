@@ -6,7 +6,7 @@ module "foundations" {
   vpc_region          = "${var.test_vpc_region}"
   cluster_name        = "${var.test_cluster_name}"
   usernames           = ["terraform"]
-  userkeys            = ["${file("~/.ssh/terraform.pub")}"]
+  userkeys            = ["${file("${var.test_private_key_path}.pub")}"]
   bastion_ssh_port    = "${var.test_bastion_ssh_port}"
   trusted_cidrs       = ["${var.test_from_ip}/32"]
   coreos_ami_owner_id = "${var.test_coreos_ami_owner_id}"
@@ -26,7 +26,7 @@ module "etcd_cluster" {
   cloud_config_bucket        = "${module.foundations.cloud_config_bucket}"
   etcd_version               = "${var.test_etcd_version}"
   etcd_instance_type         = "t2.micro"
-  etcd_instance_count        = "3"
+  etcd_instance_count        = "${var.test_etcd_node_count}"
   etcd_asg_health_check_type = "ELB"
   sg_vpn_id                  = "${module.foundations.sg_vpn_id}"
   etcd_iam_role_name         = "${module.foundations.etcd_iam_role_name}"
@@ -39,5 +39,5 @@ module "etcd_cluster" {
   private_subnet_ids         = "${module.foundations.private_subnet_ids}"
   internal_domain            = "${var.test_internal_domain}"
   usernames                  = ["terraform"]
-  userkeys                   = ["${file("~/.ssh/terraform.pub")}"]
+  userkeys                   = ["${file("${var.test_private_key_path}.pub")}"]
 }

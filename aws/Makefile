@@ -8,4 +8,4 @@ etcd-test-teardown:
 
 etcd-test-run:
 	@echo "Launch compliance tests on etcd cluster"
-	cd ./etcd_cluster/tests && ./run_tests.sh setup && cd -
+	cd ./etcd_cluster/tests && ./run_tests.sh test && cd -
