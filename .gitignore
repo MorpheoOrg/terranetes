@@ -22,4 +22,4 @@ terraform.tfvars
 .terraform/
 
 # TLS assets for tests
-tests/tls
+aws/tests/tls

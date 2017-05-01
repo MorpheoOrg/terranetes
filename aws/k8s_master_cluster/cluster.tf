@@ -34,7 +34,6 @@ resource "aws_elb" "k8s_master" {
     unhealthy_threshold = 2
     timeout             = 5
 
-    # TODO: change that
     target   = "HTTP:8080/healthz"
     interval = 10
   }
@@ -51,6 +50,10 @@ resource "aws_autoscaling_group" "k8s_masters" {
 
   max_size = "${2 * var.k8s_master_instance_count}"
   min_size = "${var.k8s_master_instance_count}"
+
+  health_check_type         = "${var.k8s_master_asg_health_check_type}"
+  health_check_grace_period = "1200"
+  default_cooldown          = "30"
 
   termination_policies = ["OldestLaunchConfiguration", "ClosestToNextInstanceHour"]
   force_delete         = true

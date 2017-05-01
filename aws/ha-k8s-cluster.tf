@@ -48,34 +48,6 @@ module "foundations" {
 module "etcd_cluster" {
   source = "./etcd_cluster"
 
-  vpc_name                 = "${var.vpc_name}"
-  vpc_number               = "${var.vpc_number}"
-  vpc_region               = "${var.vpc_region}"
-  cluster_name             = "${var.cluster_name}"
-  coreos_ami_id            = "${module.foundations.coreos_ami_id}"
-  cloud_config_bucket      = "${module.foundations.cloud_config_bucket}"
-  etcd_version             = "${var.etcd_version}"
-  etcd_instance_type       = "${var.etcd_instance_type}"
-  etcd_instance_count      = "${var.etcd_instance_count}"
-  sg_vpn_id                = "${module.foundations.sg_vpn_id}"
-  etcd_iam_role_name       = "${module.foundations.etcd_iam_role_name}"
-  etcd_iam_profile_arn     = "${module.foundations.etcd_iam_profile_arn}"
-  route53_internal_zone_id = "${module.foundations.route53_internal_zone_id}"
-  bastion_ip               = "${module.foundations.bastion_ip}"
-  bastion_ssh_port         = "${var.bastion_ssh_port}"
-  terraform_ssh_key_path   = "${var.terraform_ssh_key_path}"
-  cloud_config_bucket      = "${module.foundations.cloud_config_bucket}"
-  private_subnet_ids       = "${module.foundations.private_subnet_ids}"
-  internal_domain          = "${var.internal_domain}"
-  usernames                = ["${var.usernames}"]
-  userkeys                 = ["${var.userkeys}"]
-  extra_units              = ["${var.etcd_extra_units}"]
-  extra_files              = ["${var.etcd_extra_files}"]
-}
-
-module "k8s_master_cluster" {
-  source = "./k8s_master_cluster"
-
   vpc_name                   = "${var.vpc_name}"
   vpc_number                 = "${var.vpc_number}"
   vpc_region                 = "${var.vpc_region}"
@@ -83,15 +55,12 @@ module "k8s_master_cluster" {
   coreos_ami_id              = "${module.foundations.coreos_ami_id}"
   cloud_config_bucket        = "${module.foundations.cloud_config_bucket}"
   etcd_version               = "${var.etcd_version}"
-  hyperkube_tag              = "${var.hyperkube_tag}"
-  k8s_master_instance_type   = "${var.k8s_master_instance_type}"
-  k8s_master_instance_count  = "${var.k8s_master_instance_count}"
-  k8s_master_disk_size       = "${var.k8s_master_disk_size}"
-  etcd_endpoint              = "${module.etcd_cluster.etcd_endpoint}"
-  k8s_master_endpoint        = "${module.etcd_cluster.k8s_master_endpoint}"
+  etcd_instance_type         = "${var.etcd_instance_type}"
+  etcd_instance_count        = "${var.etcd_instance_count}"
+  etcd_asg_health_check_type = "${var.etcd_asg_health_check_type}"
   sg_vpn_id                  = "${module.foundations.sg_vpn_id}"
-  k8s_master_iam_role_name   = "${module.foundations.k8s_master_iam_role_name}"
-  k8s_master_iam_profile_arn = "${module.foundations.k8s_master_profile_arn}"
+  etcd_iam_role_name         = "${module.foundations.etcd_iam_role_name}"
+  etcd_iam_profile_arn       = "${module.foundations.etcd_iam_profile_arn}"
   route53_internal_zone_id   = "${module.foundations.route53_internal_zone_id}"
   bastion_ip                 = "${module.foundations.bastion_ip}"
   bastion_ssh_port           = "${var.bastion_ssh_port}"
@@ -101,6 +70,39 @@ module "k8s_master_cluster" {
   internal_domain            = "${var.internal_domain}"
   usernames                  = ["${var.usernames}"]
   userkeys                   = ["${var.userkeys}"]
+  extra_units                = ["${var.etcd_extra_units}"]
+  extra_files                = ["${var.etcd_extra_files}"]
+}
+
+module "k8s_master_cluster" {
+  source = "./k8s_master_cluster"
+
+  vpc_name                         = "${var.vpc_name}"
+  vpc_number                       = "${var.vpc_number}"
+  vpc_region                       = "${var.vpc_region}"
+  cluster_name                     = "${var.cluster_name}"
+  coreos_ami_id                    = "${module.foundations.coreos_ami_id}"
+  cloud_config_bucket              = "${module.foundations.cloud_config_bucket}"
+  etcd_version                     = "${var.etcd_version}"
+  hyperkube_tag                    = "${var.hyperkube_tag}"
+  k8s_master_instance_type         = "${var.k8s_master_instance_type}"
+  k8s_master_instance_count        = "${var.k8s_master_instance_count}"
+  k8s_master_asg_health_check_type = "${var.k8s_master_asg_health_check_type}"
+  k8s_master_disk_size             = "${var.k8s_master_disk_size}"
+  etcd_endpoint                    = "${module.etcd_cluster.etcd_endpoint}"
+  k8s_master_endpoint              = "${module.etcd_cluster.k8s_master_endpoint}"
+  sg_vpn_id                        = "${module.foundations.sg_vpn_id}"
+  k8s_master_iam_role_name         = "${module.foundations.k8s_master_iam_role_name}"
+  k8s_master_iam_profile_arn       = "${module.foundations.k8s_master_profile_arn}"
+  route53_internal_zone_id         = "${module.foundations.route53_internal_zone_id}"
+  bastion_ip                       = "${module.foundations.bastion_ip}"
+  bastion_ssh_port                 = "${var.bastion_ssh_port}"
+  terraform_ssh_key_path           = "${var.terraform_ssh_key_path}"
+  cloud_config_bucket              = "${module.foundations.cloud_config_bucket}"
+  private_subnet_ids               = "${module.foundations.private_subnet_ids}"
+  internal_domain                  = "${var.internal_domain}"
+  usernames                        = ["${var.usernames}"]
+  userkeys                         = ["${var.userkeys}"]
 
   # TLS assets
   k8s_tls_cakey   = "${var.k8s_tls_cakey}"

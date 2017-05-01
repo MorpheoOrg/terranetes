@@ -88,6 +88,12 @@ variable "test_etcd_node_count" {
   description = "Size of the test cluster"
 }
 
+variable "test_hyperkube_image" {
+  default     = "v1.6.2_coreos.0"
+  type        = "string"
+  description = "hyperkube image tag to use (fetched from quay.io)"
+}
+
 ### IP allowed to SSH onto our test infrastructure ###
 variable "test_from_ip" {
   type        = "string"

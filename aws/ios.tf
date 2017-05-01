@@ -99,6 +99,12 @@ variable "etcd_instance_count" {
   default     = 3
 }
 
+variable "etcd_asg_health_check_type" {
+  description = "The health check type to use for the etcd ASG (EC2 or ELB)"
+  default     = "EC2"
+  type        = "string"
+}
+
 variable "hyperkube_tag" {
   description = "The version of Hyperkube to use (should be a valid tag of the official CoreOS image for Kubelet, see here: https://quay.io/repository/coreos/hyperkube?tab=tags)."
   type        = "string"
@@ -114,6 +120,12 @@ variable "k8s_master_instance_count" {
   description = "The number of Kubernetes nodes to run (2 is recommended)."
   type        = "string"
   default     = 2
+}
+
+variable "k8s_master_asg_health_check_type" {
+  description = "The number of Kubernetes masters to use (at least 2 if you seek to achieve high availability)."
+  default     = "EC2"
+  type        = "string"
 }
 
 variable "k8s_master_disk_size" {

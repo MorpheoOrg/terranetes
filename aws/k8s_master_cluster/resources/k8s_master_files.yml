@@ -23,7 +23,7 @@
               - --insecure-bind-address=0.0.0.0
               - --secure-port=443
               - --insecure-port=8080
-              - --etcd-servers=http://${etcd_endpoint}:2379
+              - --etcd-servers=${etcd_endpoint}
               - --allow-privileged=true
               - --service-cluster-ip-range=${k8s_service_cidr}
               - --cloud-provider=aws
