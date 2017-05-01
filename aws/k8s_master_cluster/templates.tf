@@ -40,24 +40,6 @@ data "template_file" "flannel_units" {
   }
 }
 
-##### ETCD PROXY CONFIGURATION #####
-data "template_file" "etcd_proxy_units" {
-  template = "${file("${path.module}/resources/etcd_proxy_units.yml")}"
-
-  vars {
-    etcd_endpoint = "${var.etcd_endpoint}"
-    etcd_version  = "${var.etcd_version}"
-  }
-}
-
-data "template_file" "etcd_proxy_files" {
-  template = "${file("${path.module}/resources/etcd_proxy_files.yml")}"
-
-  vars {
-    configure_etcd_proxy_script = "${file("${path.module}/resources/configure_etcd_proxy.sh")}"
-  }
-}
-
 ##### KUBERNETES MASTERS CONFIGURATION #####
 data "template_file" "kubelet_master_units" {
   template = "${file("${path.module}/resources/kubelet_master_units.yml")}"

@@ -26,12 +26,10 @@ coreos:
 ${data.template_file.flannel.rendered}
   units:
 ${data.template_file.flannel_units.rendered}
-${data.template_file.etcd_proxy_units.rendered}
 ${data.template_file.kubelet_master_units.rendered}
 
 write_files:
 ${data.template_file.k8s_master_files.rendered}
-${data.template_file.etcd_proxy_files.rendered}
 
 users:
 ${join("\n", data.template_file.user.*.rendered)}
