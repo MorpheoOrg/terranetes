@@ -81,6 +81,12 @@ resource "aws_autoscaling_group" "k8s_masters" {
     value               = "${var.cluster_name}"
     propagate_at_launch = "true"
   }
+
+  # This provisioner script simply waits for the Kubernetes master to be
+  # healthy and respond to kubectl commands
+  provisioner "local-exec" {
+    command = "${path.module}/resources/wait_for_health.sh ${var.bastion_ip} ${var.bastion_ssh_port} ${var.terraform_ssh_key_path} ${var.cluster_name} ${var.internal_domain}"
+  }
 }
 
 resource "aws_launch_configuration" "k8s_master" {
