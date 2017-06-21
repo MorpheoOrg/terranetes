@@ -27,7 +27,7 @@ sleep 60s
 
 consecutively_successful_checks=0
 while [[ "$consecutively_successful_checks" -le 10 ]]; do
-  "kubectl cluster-info"
+  kubectl cluster-info
   status="$?"
   if [[ "$status" -eq 0 ]]; then
     consecutively_successful_checks=$((consecutively_successful_checks+1))
