@@ -16,6 +16,7 @@ INTERNAL_DOMAIN="$5"
 echo " ((((())))) Waiting for the Kubernetes master cluster to be available..."
 
 echo " ((((())))) Configuring local kubectl to talk to the APIServer..."
+killall ssh
 ssh -oStrictHostKeyChecking=no -t -t -A -L "6443:k8s.$CLUSTER_NAME.$INTERNAL_DOMAIN:443" -p "$BASTION_SSH_PORT" -i "$TERRAFORM_KEYFILE" terraform@"$BASTION_IP" &
 tlsdir="./tls/${CLUSTER_NAME}"
 echo "Configuring Kube Control ! (binding local kubectl to the remote one on AWS)"
@@ -38,5 +39,7 @@ while [[ "$consecutively_successful_checks" -le 10 ]]; do
   fi
 done
 
+echo "Killing SSH port forwarding process"
+killall ssh
 echo "Kubernetes master seems to be up :)"
 exit 0
