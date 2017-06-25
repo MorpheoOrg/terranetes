@@ -68,8 +68,14 @@ variable "k8s_master_instance_count" {
 }
 
 variable "k8s_master_asg_health_check_type" {
-  description = "The number of Kubernetes masters to use (at least 2 if you seek to achieve high availability)."
+  description = "The health check type to use on master autoscaling group (EC2 or ELB)"
   default     = "EC2"
+  type        = "string"
+}
+
+variable "k8s_master_asg_health_check_grace_period" {
+  description = "The kubernetes masters' health check grace period"
+  default     = "600"
   type        = "string"
 }
 

@@ -58,6 +58,7 @@ module "etcd_cluster" {
   etcd_instance_type         = "${var.etcd_instance_type}"
   etcd_instance_count        = "${var.etcd_instance_count}"
   etcd_asg_health_check_type = "${var.etcd_asg_health_check_type}"
+  etcd_asg_health_check_type = "${var.etcd_asg_health_check_grace_period}"
   sg_vpn_id                  = "${module.foundations.sg_vpn_id}"
   etcd_iam_role_name         = "${module.foundations.etcd_iam_role_name}"
   etcd_iam_profile_arn       = "${module.foundations.etcd_iam_profile_arn}"

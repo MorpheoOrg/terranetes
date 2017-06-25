@@ -105,6 +105,12 @@ variable "etcd_asg_health_check_type" {
   type        = "string"
 }
 
+variable "k8s_master_asg_health_check_grace_period" {
+  description = "The kubernetes masters' health check grace period"
+  default     = "600"
+  type        = "string"
+}
+
 variable "hyperkube_tag" {
   description = "The version of Hyperkube to use (should be a valid tag of the official CoreOS image for Kubelet, see here: https://quay.io/repository/coreos/hyperkube?tab=tags)."
   type        = "string"

@@ -31,14 +31,14 @@ resource "aws_elb" "k8s_master" {
 
   health_check {
     healthy_threshold   = 2
-    unhealthy_threshold = 2
+    unhealthy_threshold = 10
     timeout             = 5
 
     target   = "HTTP:8080/healthz"
-    interval = 10
+    interval = 30
   }
 
-  idle_timeout = 3600
+  idle_timeout = 60
 }
 
 resource "aws_autoscaling_group" "k8s_masters" {
@@ -52,7 +52,7 @@ resource "aws_autoscaling_group" "k8s_masters" {
   min_size = "${var.k8s_master_instance_count}"
 
   health_check_type         = "${var.k8s_master_asg_health_check_type}"
-  health_check_grace_period = "1200"
+  health_check_grace_period = "${var.k8s_master_asg_health_check_grace_period}"
   default_cooldown          = "30"
 
   termination_policies = ["OldestLaunchConfiguration", "ClosestToNextInstanceHour"]

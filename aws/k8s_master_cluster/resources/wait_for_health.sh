@@ -38,4 +38,5 @@ while [[ "$consecutively_successful_checks" -le 10 ]]; do
   fi
 done
 
+echo "Kubernetes master seems to be up :)"
 exit 0
