@@ -267,23 +267,23 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "bastion" {
-  name  = "bastion-${var.cluster_name}"
-  roles = ["${aws_iam_role.bastion.name}"]
+  name = "bastion-${var.cluster_name}"
+  role = "${aws_iam_role.bastion.name}"
 }
 
 resource "aws_iam_instance_profile" "etcd" {
-  name  = "etcd-${var.cluster_name}"
-  roles = ["${aws_iam_role.etcd.name}"]
+  name = "etcd-${var.cluster_name}"
+  role = "${aws_iam_role.etcd.name}"
 }
 
 resource "aws_iam_instance_profile" "k8s_master" {
-  name  = "kubernetes-master-${var.cluster_name}"
-  roles = ["${aws_iam_role.k8s_master.name}"]
+  name = "kubernetes-master-${var.cluster_name}"
+  role = "${aws_iam_role.k8s_master.name}"
 }
 
 resource "aws_iam_instance_profile" "k8s_worker" {
-  name  = "kubernetes-worker-${var.cluster_name}"
-  roles = ["${aws_iam_role.k8s_worker.name}"]
+  name = "kubernetes-worker-${var.cluster_name}"
+  role = "${aws_iam_role.k8s_worker.name}"
 
   lifecycle {
     create_before_destroy = true
