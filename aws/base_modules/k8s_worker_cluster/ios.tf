@@ -102,6 +102,11 @@ variable "k8s_worker_profile_arn" {
   type        = "string"
 }
 
+variable "bastion_ip" {
+  description = "The IP Adress of a bastion host"
+  type        = "string"
+}
+
 variable "bastion_ssh_port" {
   description = "The port to use to SSH onto your bastion host (avoid using 22 or 2222, a lot of bots are keeping on trying to scan this ports with random usernames and passwords and it tends to fill the SSHD logs a bit too much sometimes...)"
   type        = "string"
@@ -151,6 +156,11 @@ variable "extra_units" {
 variable "load_balancers" {
   description = "A list of load-balancers to attach to this cluster's auto-scaling group"
   type        = "list"
+  default     = []
+}
 
-  default = []
+variable "kubernetes_manifests" {
+  description = "A list of kubernetes YAML manifests to push once this ASG has been created"
+  type        = "list"
+  default     = []
 }

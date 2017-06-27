@@ -6,8 +6,6 @@ BASTION_SSH_PORT="$2"
 TERRAFORM_KEYFILE="$3"
 CLUSTER_NAME="$4"
 INTERNAL_DOMAIN="$5"
-KUBE_DNS_MANIFESTS="$6"
-KUBE_DASHBOARD_MANIFESTS="$7"
 
 echo " ((((())))) Waiting for the Kubernetes master cluster to be available..."
 
@@ -26,13 +24,14 @@ kubectl config set-context "$CLUSTER_NAME-default-system" --cluster="$CLUSTER_NA
 kubectl config use-context "$CLUSTER_NAME-default-system"
 
 
-# Spawns our kubernetes manifests
-echo "$KUBE_DNS_MANIFESTS" > kube-dns.yml
-echo "Spawning/updating kube-dns..."
-kubectl apply -f kube-dns.yml
-echo "Spawning/updating dashboard..."
-echo "$KUBE_DASHBOARD_MANIFESTS" > dashboard.yml
-kubectl apply -f dashboard.yml
+# Spawns our kubernetes manifests :)
+echo "Spawing/updating Kubernetes manifests..."
+i=6
+while [[ ! -z "${!i}" ]]; do
+  echo "${!i}" > manifest.yml
+  kubectl apply -f manifest.yml
+  i=$((i+1))
+done
 
 # Bye
 killall ssh

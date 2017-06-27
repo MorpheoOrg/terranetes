@@ -87,19 +87,6 @@ resource "aws_autoscaling_group" "k8s_masters" {
   provisioner "local-exec" {
     command = "${path.module}/resources/wait_for_health.sh ${var.bastion_ip} ${var.bastion_ssh_port} ${var.terraform_ssh_key_path} ${var.cluster_name} ${var.internal_domain}"
   }
-
-  # This one spawns the kube-system base components (kube-dns, heapster,
-  # kubernetes-dashboard) as well as optional addons (nginx ingress controller,
-  # lego for automatic SSL with Let's Encrypt, OpenVPN...)
-  provisioner "local-exec" {
-    command = <<EOF
-      ${path.module}/resources/spawn_base.sh \
-      ${var.bastion_ip} ${var.bastion_ssh_port} ${var.terraform_ssh_key_path} \
-      ${var.cluster_name} ${var.internal_domain} \
-      "${data.template_file.kube_dns.rendered}" \
-      "${data.template_file.kube_dashboard.rendered}"
-EOF
-  }
 }
 
 resource "aws_launch_configuration" "k8s_master" {

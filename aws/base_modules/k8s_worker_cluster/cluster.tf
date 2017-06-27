@@ -31,7 +31,7 @@ resource "aws_autoscaling_group" "k8s_worker_group" {
 
   tag {
     key                 = "Name"
-    value               = "${var.worker_group_name}s"
+    value               = "${var.worker_group_name}"
     propagate_at_launch = true
   }
 
@@ -51,6 +51,18 @@ resource "aws_autoscaling_group" "k8s_worker_group" {
     key                 = "TerraformDependencyHook"
     value               = "${var.dependency_hooks}"
     propagate_at_launch = false
+  }
+
+  # This one spawns the kube-system base components (kube-dns, heapster,
+  # kubernetes-dashboard) as well as optional addons (nginx ingress controller,
+  # lego for automatic SSL with Let's Encrypt, OpenVPN...)
+  provisioner "local-exec" {
+    command = <<EOF
+      ${path.module}/scripts/deploy_manifests.sh \
+      ${var.bastion_ip} ${var.bastion_ssh_port} ${var.terraform_ssh_key_path} \
+      ${var.cluster_name} ${var.internal_domain} \
+      ${join(" ", formatlist("\"%s\"", var.kubernetes_manifests))}
+EOF
   }
 }
 

@@ -110,13 +110,5 @@ module "k8s_master_cluster" {
   k8s_tls_apikey  = "${var.k8s_tls_apikey}"
   k8s_tls_apicert = "${var.k8s_tls_apicert}"
 
-  # Kubernetes manifests variable
-  kube_dns_replicas              = "${var.kube_dns_replicas}"
-  kube_dns_image                 = "${var.kube_dns_image}"
-  kube_dns_dnsmasq_image         = "${var.kube_dns_dnsmasq_image}"
-  kube_dns_dnsmasq_metrics_image = "${var.kube_dns_dnsmasq_metrics_image}"
-  kube_dns_exechealthz_image     = "${var.kube_dns_exechealthz_image}"
-  kube_dashboard_image           = "${var.kube_dashboard_image}"
-
   dependency_hooks = "${module.etcd_cluster.dependency_hook}"
 }
