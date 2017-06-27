@@ -70,7 +70,7 @@ case "$1" in
     echo "[INFO] Setting up test environment..."
 
     echo "[INFO] Generating TLS certificates for test cluster..."
-    ../scripts/tls-gen.sh "$TNTEST_CLUSTER_NAME" "$TNTEST_DOMAIN" "10.$((TNTEST_VPC_NUMBER + 1)).128.1"
+    ../scripts/tls_gen.sh "$TNTEST_CLUSTER_NAME" "$TNTEST_DOMAIN" "10.$((TNTEST_VPC_NUMBER + 1)).128.1"
 
     echo "[INFO] Generating terraform plan"
     terraform get && terraform plan
@@ -100,7 +100,7 @@ case "$1" in
 
   test)
     echo "[INFO] Running tests !!!!"
-    ./test-suite.sh "$TNTEST_PRIVATE_KEY_PATH" "$TNTEST_BASTION_SSH_PORT" "$TNTEST_VPC_REGION" bastion "$TNTEST_CLUSTER_NAME" "$TNTEST_DOMAIN" 3
+    ./test_suite.sh "$TNTEST_PRIVATE_KEY_PATH" "$TNTEST_BASTION_SSH_PORT" "$TNTEST_VPC_REGION" bastion "$TNTEST_CLUSTER_NAME" "$TNTEST_DOMAIN" 3
     exit "$?"
     ;;
 

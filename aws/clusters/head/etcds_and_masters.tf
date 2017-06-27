@@ -27,7 +27,7 @@
  */
 
 module "foundations" {
-  source = "./plumbing"
+  source = "../../base_modules/plumbing"
 
   vpc_name            = "${var.vpc_name}"
   vpc_number          = "${var.vpc_number}"
@@ -46,7 +46,7 @@ module "foundations" {
 }
 
 module "etcd_cluster" {
-  source = "./etcd_cluster"
+  source = "../../base_modules/etcd_cluster"
 
   vpc_name                 = "${var.vpc_name}"
   vpc_number               = "${var.vpc_number}"
@@ -74,7 +74,7 @@ module "etcd_cluster" {
 }
 
 module "k8s_master_cluster" {
-  source = "./k8s_master_cluster"
+  source = "../../base_modules/k8s_master_cluster"
 
   vpc_name                                 = "${var.vpc_name}"
   vpc_number                               = "${var.vpc_number}"

@@ -9,7 +9,7 @@
 
 ##### CLOUD CONFIG TO DOWNLOAD MORE CLOUD CONFIG FROM S3 (0_o) ######
 data "template_file" "etcd_s3_cloud_config" {
-  template = "${file("${path.module}/../cloud-configs/run_s3_cloud_config.yml")}"
+  template = "${file("${path.module}/../cloud_configs/run_s3_cloud_config.yml")}"
 
   vars {
     bucket_region         = "${var.vpc_region}"
@@ -53,7 +53,7 @@ data "template_file" "etcd_reconfiguration_unit" {
 ###### USERS WITH SSH ACCESS TO OUR EC2 INSTANCES ######
 data "template_file" "user" {
   count    = "${length(var.usernames)}"
-  template = "${file("${path.module}/../cloud-configs/user_cloud_config.yml")}"
+  template = "${file("${path.module}/../cloud_configs/user_cloud_config.yml")}"
 
   vars {
     username    = "${element(var.usernames, count.index)}"

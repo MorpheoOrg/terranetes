@@ -12,7 +12,7 @@
  */
 
 data "template_file" "k8s_master_s3_cloud_config" {
-  template = "${file("${path.module}/../cloud-configs/run_s3_cloud_config.yml")}"
+  template = "${file("${path.module}/../cloud_configs/run_s3_cloud_config.yml")}"
 
   vars {
     bucket_region         = "${var.vpc_region}"
@@ -24,7 +24,7 @@ data "template_file" "k8s_master_s3_cloud_config" {
 
 ##### FLANNEL CONFIGURATION #####
 data "template_file" "flannel" {
-  template = "${file("${path.module}/../cloud-configs/flannel_config.yml")}"
+  template = "${file("${path.module}/../cloud_configs/flannel_config.yml")}"
 
   vars {
     etcd_endpoint = "${var.etcd_endpoint}"
@@ -32,7 +32,7 @@ data "template_file" "flannel" {
 }
 
 data "template_file" "flannel_units" {
-  template = "${file("${path.module}/../cloud-configs/flannel_units.yml")}"
+  template = "${file("${path.module}/../cloud_configs/flannel_units.yml")}"
 
   vars {
     etcd_endpoint      = "${var.etcd_endpoint}"
@@ -73,7 +73,7 @@ data "template_file" "k8s_master_files" {
 ###### USERS WITH SSH ACCESS TO OUR EC2 INSTANCES ######
 data "template_file" "user" {
   count    = "${length(var.usernames)}"
-  template = "${file("${path.module}/../cloud-configs/user_cloud_config.yml")}"
+  template = "${file("${path.module}/../cloud_configs/user_cloud_config.yml")}"
 
   vars {
     username    = "${element(var.usernames, count.index)}"

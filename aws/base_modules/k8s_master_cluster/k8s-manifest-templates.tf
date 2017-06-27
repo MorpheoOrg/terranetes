@@ -12,7 +12,7 @@
  */
 
 data "template_file" "kube_dns" {
-  template = "${file("${path.module}/../../k8s/system/kube-dns.yml")}"
+  template = "${file("${path.module}/../../../k8s/system/kube-dns.yml")}"
 
   vars {
     replicas              = "${var.kube_dns_replicas}"
@@ -26,7 +26,7 @@ data "template_file" "kube_dns" {
 }
 
 data "template_file" "kube_dashboard" {
-  template = "${file("${path.module}/../../k8s/system/dashboard.yml")}"
+  template = "${file("${path.module}/../../../k8s/system/dashboard.yml")}"
 
   vars {
     kubedashboard_image = "${var.kube_dashboard_image}"
