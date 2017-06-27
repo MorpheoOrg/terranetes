@@ -1,0 +1,73 @@
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    env: kube-system
+    run: dashboard
+    app: dashboard
+  name: dashboard
+  namespace: kube-system
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 9090
+    name: http
+  selector:
+    env: kube-system
+    run: dashboard
+    app: dashboard
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  labels:
+    env: kube-system
+    run: dashboard
+    app: dashboard
+  name: dashboard
+  namespace: kube-system
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      env: kube-system
+      run: dashboard
+      app: dashboard
+  template:
+    metadata:
+      labels:
+        env: kube-system
+        run: dashboard
+        app: dashboard
+    spec:
+      containers:
+        - name: kubernetes-dashboard
+          image: "${kubedashboard_image}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9090
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9090
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+          volumeMounts:
+            - name: resolv-conf
+              mountPath: /etc/resolv.conf
+          resources:
+            limits:
+              memory: 150Mi
+            requests:
+              cpu: 100m
+              memory: 150Mi
+      volumes:
+        - name: resolv-conf
+          hostPath:
+            path: /etc/resolv.conf
+      nodeSelector:
+        role.node: system
+      restartPolicy: Always

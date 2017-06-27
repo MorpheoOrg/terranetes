@@ -34,7 +34,7 @@ killall ssh
 
 echo "Creating SSH tunnels to our AWS bastions in region $AWS_REGION..."
 
-echo "ssh -A -L -oStrictHostKeyChecking=no \"6443:k8s.$CLUSTER_NAME.$INTERNAL_DOMAIN:443\" -p \"$SSH_PORT\" -i \"$USERKEY\" \"$USERNAME\"@\"$ip_address\""
+echo "ssh -A -oStrictHostKeyChecking=no -L \"6443:k8s.$CLUSTER_NAME.$INTERNAL_DOMAIN:443\" -p \"$SSH_PORT\" -i \"$USERKEY\" \"$USERNAME\"@\"$ip_address\""
 
 nohup ssh -oStrictHostKeyChecking=no -t -t -A -L "6443:k8s.$CLUSTER_NAME.$INTERNAL_DOMAIN:443" -p "$SSH_PORT" -i "$USERKEY" "$USERNAME"@"$ip_address" >>/dev/null &
 nohup ssh -oStrictHostKeyChecking=no -t -t -A -L "2379:etcd.$CLUSTER_NAME.$INTERNAL_DOMAIN:2379" -p "$SSH_PORT" -i "$USERKEY" "$USERNAME"@"$ip_address" >>/dev/null &

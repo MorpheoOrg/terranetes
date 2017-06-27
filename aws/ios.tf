@@ -178,6 +178,46 @@ variable "etcd_extra_files" {
   default     = []
 }
 
+## KUBERNETES MANIFESTS VARIABLES ##
+
+variable "kube_dns_replicas" {
+  description = "Number of kube-dns replicas to run"
+  type        = "string"
+  default     = "3"
+}
+
+variable "kube_dns_image" {
+  description = "Docker image to use for kube-dns"
+  type        = "string"
+  default     = "gcr.io/google_containers/kubedns-amd64:1.9"
+}
+
+variable "kube_dns_dnsmasq_image" {
+  description = "Docker image to use for kube-dns dnsmasq"
+  type        = "string"
+  default     = "gcr.io/google_containers/kube-dnsmasq-amd64:1.4"
+}
+
+variable "kube_dns_dnsmasq_metrics_image" {
+  description = "Docker image to use for kube-dns dnsmasq metrics"
+  type        = "string"
+  default     = "gcr.io/google_containers/dnsmasq-metrics-amd64:1.0"
+}
+
+variable "kube_dns_exechealthz_image" {
+  description = "Docker image to use for kube-dns exechealthz"
+  type        = "string"
+  default     = "gcr.io/google_containers/exechealthz-amd64:1.2"
+}
+
+variable "kube_dashboard_image" {
+  description = "Docker image to use for kubernetes-dashboard"
+  type        = "string"
+  default     = "gcr.io/google_containers/kubernetes-dashboard-amd64:v1.6.1"
+}
+
+## OUTPUTS ##
+
 output "vpc_id" {
   value = "${module.foundations.vpc_id}"
 }

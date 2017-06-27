@@ -176,3 +176,34 @@ output "k8s_master_endpoint" {
 output "dependency_hook" {
   value = "${null_resource.dependency_hook.id}"
 }
+
+# Kubernetes manifest variables
+variable "kube_dns_replicas" {
+  description = "Number of kube-dns replicas to run"
+  type        = "string"
+}
+
+variable "kube_dns_image" {
+  description = "Docker image to use for kube-dns"
+  type        = "string"
+}
+
+variable "kube_dns_dnsmasq_image" {
+  description = "Docker image to use for kube-dns dnsmasq"
+  type        = "string"
+}
+
+variable "kube_dns_dnsmasq_metrics_image" {
+  description = "Docker image to use for kube-dns dnsmasq metrics"
+  type        = "string"
+}
+
+variable "kube_dns_exechealthz_image" {
+  description = "Docker image to use for kube-dns exechealthz"
+  type        = "string"
+}
+
+variable "kube_dashboard_image" {
+  description = "Docker image to use for kubernetes-dashboard"
+  type        = "string"
+}
