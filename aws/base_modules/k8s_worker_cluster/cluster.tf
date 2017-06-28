@@ -60,7 +60,20 @@ resource "aws_autoscaling_group" "k8s_worker_group" {
   # lego for automatic SSL with Let's Encrypt, OpenVPN...)
   provisioner "local-exec" {
     command = <<EOF
-      ${path.module}/scripts/deploy_manifests.sh \
+      ${path.module}/scripts/apply_manifests.sh \
+      ${var.bastion_ip} ${var.bastion_ssh_port} ${var.terraform_ssh_key_path} \
+      ${var.cluster_name} ${var.internal_domain} \
+      ${join(" ", formatlist("\"%s\"", var.kubernetes_manifests))}
+EOF
+  }
+
+  # And this one destroys the given resources from the Kubernetes API when the
+  # nodes are destroyed
+  provisioner "local-exec" {
+    when = "destroy"
+
+    command = <<EOF
+      ${path.module}/scripts/delete_manifests.sh \
       ${var.bastion_ip} ${var.bastion_ssh_port} ${var.terraform_ssh_key_path} \
       ${var.cluster_name} ${var.internal_domain} \
       ${join(" ", formatlist("\"%s\"", var.kubernetes_manifests))}
