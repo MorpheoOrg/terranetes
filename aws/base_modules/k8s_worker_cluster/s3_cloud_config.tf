@@ -8,6 +8,8 @@
  */
 
 resource "aws_s3_bucket_object" "k8s_public_workers_cloud_configs" {
+  count = "${var.enable}"
+
   bucket = "${var.cloud_config_bucket}"
   key    = "${var.cluster_name}/k8s_worker_${var.worker_group_name}.yml"
 
@@ -20,10 +22,9 @@ ${data.template_file.flannel.rendered}
 ${data.template_file.flannel_units.rendered}
 ${data.template_file.kubelet_public_worker_units.rendered}
 ${join("\n", var.extra_units)}
-
 write_files:
 ${data.template_file.k8s_worker_files.rendered}
-
+${join("\n", var.extra_files)}
 users:
 ${join("\n", data.template_file.user.*.rendered)}
 EOF

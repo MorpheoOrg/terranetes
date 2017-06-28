@@ -76,6 +76,12 @@ variable "bastion_extra_units" {
   default     = []
 }
 
+variable "bastion_extra_files" {
+  description = "Extra files (don't forget the 4-space indentation) to put on the bastion host"
+  type        = "list"
+  default     = []
+}
+
 output "vpc_id" {
   value = "${aws_vpc.main.id}"
 }

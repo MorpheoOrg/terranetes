@@ -7,6 +7,12 @@
  *  for more information.
  */
 
+variable "enable" {
+  description = "If set to 0, these cluster's ASG won't be created"
+  type        = "string"
+  default     = 1
+}
+
 variable "vpc_name" {
   description = "Arbitrary name to give to your VPC"
   type        = "string"
@@ -148,7 +154,13 @@ variable "dependency_hooks" {
 }
 
 variable "extra_units" {
-  description = "Extra unit files (don't forget the 4-space indentation) to run on these nodes"
+  description = "Extra systemd unit files (don't forget the 4-space indentation) to run on these nodes"
+  type        = "list"
+  default     = []
+}
+
+variable "extra_files" {
+  description = "Extra files (don't forget the 4-space indentation) to put on these nodes"
   type        = "list"
   default     = []
 }

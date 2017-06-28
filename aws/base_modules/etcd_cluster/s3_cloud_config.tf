@@ -19,12 +19,10 @@ coreos:
 ${data.template_file.etcd_unit.rendered}
 ${data.template_file.etcd_reconfiguration_unit.rendered}
 ${join("\n", var.extra_units)}
-
 write_files:
 ${data.template_file.etcd_config.rendered}
 ${data.template_file.etcd_scripts.rendered}
 ${join("\n", var.extra_files)}
-
 users:
 ${join("\n", data.template_file.user.*.rendered)}
 EOF

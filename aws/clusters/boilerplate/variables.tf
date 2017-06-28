@@ -7,6 +7,9 @@
  *  for more information.
  */
 
+/*
+ * AWS VPC parameters, networking and admin access
+ */
 variable "vpc_region" {
   description = "The AWS region to create your Kubernetes cluster into."
   type        = "string"
@@ -25,6 +28,8 @@ variable "vpc_number" {
 variable "cluster_name" {
   description = "The name of the Kubernetes cluster to create (necessary when federating clusters)."
   type        = "string"
+
+  default = "default"
 }
 
 variable "usernames" {
@@ -52,6 +57,31 @@ variable "trusted_cidrs" {
   type        = "list"
 }
 
+variable "cloud_config_bucket" {
+  description = "The name of the bucket in which to store your instances cloud-config files."
+  type        = "string"
+}
+
+variable "internal_domain" {
+  description = "The internal domain name suffix to be atted to your etcd & k8s master ELBs (ex. company.int)"
+  type        = "string"
+}
+
+variable "bastion_extra_units" {
+  description = "Extra unit files (don't forget the 4-space indentation) to run on the bastion host"
+  type        = "list"
+  default     = []
+}
+
+variable "bastion_extra_files" {
+  description = "Extra files (don't forget the 4-space indentation) to put on the bastion host"
+  type        = "list"
+  default     = []
+}
+
+/*
+ * CoreOS base AMI for the whole cluster
+ */
 variable "coreos_ami_owner_id" {
   description = "The ID of the owner of the CoreOS image you want to use on the AWS marketplace (or yours if you're using your own AMI)."
   default     = "595879546273"
@@ -70,16 +100,9 @@ variable "virtualization_type" {
   description = "The AWS virtualization type to use (hvm or pv)"
 }
 
-variable "cloud_config_bucket" {
-  description = "The name of the bucket in which to store your instances cloud-config files."
-  type        = "string"
-}
-
-variable "internal_domain" {
-  description = "The internal domain name suffix to be atted to your etcd & k8s master ELBs (ex. company.int)"
-  type        = "string"
-}
-
+/*
+ * Etcd auto-scaling group & ELB
+ */
 variable "etcd_version" {
   description = "The etcd version to use (>v3.1.0)"
   default     = "v3.1.5"
@@ -97,11 +120,6 @@ variable "etcd_instance_count" {
   default     = 3
 }
 
-variable "etcd_disk_size" {
-  description = "Disk size on etcd nodes."
-  default     = 16
-}
-
 variable "etcd_asg_health_check_type" {
   description = "The health check type to use for the etcd ASG (EC2 or ELB)"
   default     = "EC2"
@@ -109,11 +127,32 @@ variable "etcd_asg_health_check_type" {
 }
 
 variable "etcd_asg_health_check_grace_period" {
-  description = "Health check grace period for etcd nodes"
+  description = "Grace period for the etcd health check"
   default     = "300"
   type        = "string"
 }
 
+variable "etcd_disk_size" {
+  description = "Disk size on etcd nodes"
+  type        = "string"
+  default     = 16
+}
+
+variable "etcd_extra_units" {
+  description = "Extra unit files (don't forget the 4-space indentation) to run on the etcd nodes"
+  type        = "list"
+  default     = []
+}
+
+variable "etcd_extra_files" {
+  description = "Extra files (don't forget the 2-space indentation) to be put on the etcd nodes"
+  type        = "list"
+  default     = []
+}
+
+/*
+ * Kubernetes master autoscaling group & ELB
+ */
 variable "hyperkube_tag" {
   description = "The version of Hyperkube to use (should be a valid tag of the official CoreOS image for Kubelet, see here: https://quay.io/repository/coreos/hyperkube?tab=tags)."
   type        = "string"
@@ -170,98 +209,103 @@ variable "k8s_tls_apicert" {
 }
 
 variable "k8s_master_extra_units" {
-  description = "Extra unit files (don't forget the 4-space indentation) to run on the master hosts"
+  description = "Extra unit files (don't forget the 4-space indentation) to run on the master nodes"
   type        = "list"
   default     = []
 }
 
 variable "k8s_master_extra_files" {
-  description = "Extra files (don't forget the 4-space indentation) to put on the master hosts"
+  description = "Extra files (don't forget the 2-space indentation) to be put on the master nodes"
   type        = "list"
   default     = []
 }
 
-variable "bastion_extra_units" {
-  description = "Extra unit files (don't forget the 4-space indentation) to run on the bastion host"
+/*
+ * Flavors to enable (1 is true, default if flavor key is unset, 0 is false)
+ */
+variable "flavors" {
+  default = {
+    "system" = "1"
+  }
+}
+
+/*
+ * System nodes
+ */
+variable "system_node_instance_type" {
+  description = "The type of instance to use for system nodes"
+  type        = "string"
+  default     = "t2.micro"
+}
+
+variable "system_node_min_asg_size" {
+  description = "The minimum size of the system ASG"
+  type        = "string"
+  default     = "2"
+}
+
+variable "system_node_max_asg_size" {
+  description = "The maximum size of the system ASG"
+  type        = "string"
+  default     = "4"
+}
+
+variable "system_node_disk_size" {
+  description = "The system nodes' disk size in GB"
+  type        = "string"
+  default     = "4"
+}
+
+variable "system_node_extra_units" {
+  description = "Extra systemd units to put on system nodes (Cloud Config format, add 4 space indentation)"
   type        = "list"
   default     = []
 }
 
-variable "bastion_extra_files" {
-  description = "Extra files (don't forget the 4-space indentation) to put on the bastion host"
+variable "system_node_extra_files" {
+  description = "Extra files to put on system nodes (Cloud Config format, add 4 space indentation)"
   type        = "list"
   default     = []
 }
 
-variable "etcd_extra_units" {
-  description = "Extra unit files (don't forget the 4-space indentation) to run on the etcd nodes"
+variable "kube_system_flavors" {
+  description = "A list of kubernetes components to deploy on this node (available: dns, dashboard)"
   type        = "list"
-  default     = []
+  default     = ["cluster_autoscaler", "dns", "dashboard", "heapster", "node_problem_detector", "rescheduler"]
 }
 
-variable "etcd_extra_files" {
-  description = "Extra files (don't forget the 2-space indentation) to be put on the etcd nodes"
-  type        = "list"
-  default     = []
+variable "kube_dns_replicas" {
+  description = "Number of kube-dns replicas to run"
+  type        = "string"
+  default     = "3"
 }
 
-## OUTPUTS ##
-output "vpc_id" {
-  value = "${module.foundations.vpc_id}"
+variable "kube_dns_image" {
+  description = "Docker image to use for kube-dns"
+  type        = "string"
+  default     = "gcr.io/google_containers/kubedns-amd64:1.9"
 }
 
-output "public_route_table_id" {
-  value = "${module.foundations.public_route_table_id}"
+variable "kube_dns_dnsmasq_image" {
+  description = "Docker image to use for kube-dns dnsmasq"
+  type        = "string"
+  default     = "gcr.io/google_containers/kube-dnsmasq-amd64:1.4"
 }
 
-output "private_route_table_id" {
-  value = "${module.foundations.private_route_table_id}"
+variable "kube_dns_dnsmasq_metrics_image" {
+  description = "Docker image to use for kube-dns dnsmasq metrics"
+  type        = "string"
+  default     = "gcr.io/google_containers/dnsmasq-metrics-amd64:1.0"
 }
 
-output "coreos_ami_id" {
-  value = "${module.foundations.coreos_ami_id}"
+variable "kube_dns_exechealthz_image" {
+  description = "Docker image to use for kube-dns exechealthz"
+  type        = "string"
+  default     = "gcr.io/google_containers/exechealthz-amd64:1.2"
 }
 
-output "cloud_config_bucket" {
-  value = "${module.foundations.cloud_config_bucket}"
-}
-
-output "bastion_ip" {
-  value = "${module.foundations.bastion_ip}"
-}
-
-output "etcd_endpoint" {
-  value = "${module.etcd_cluster.etcd_endpoint}"
-}
-
-output "k8s_master_endpoint" {
-  value = "${module.k8s_master_cluster.k8s_master_endpoint}"
-}
-
-output "k8s_worker_iam_role_name" {
-  value = "${module.foundations.k8s_worker_iam_role_name}"
-}
-
-output "k8s_worker_profile_arn" {
-  value = "${module.foundations.k8s_worker_profile_arn}"
-}
-
-output "private_subnet_ids" {
-  value = "${module.foundations.private_subnet_ids}"
-}
-
-output "public_subnet_ids" {
-  value = "${module.foundations.public_subnet_ids}"
-}
-
-output "route53_internal_zone_id" {
-  value = "${module.foundations.route53_internal_zone_id}"
-}
-
-output "sg_vpn_id" {
-  value = "${module.foundations.sg_vpn_id}"
-}
-
-output "dependency_hook" {
-  value = "${module.etcd_cluster.dependency_hook},${module.k8s_master_cluster.dependency_hook}"
+variable "kube_dashboard_image" {
+  description = "Docker image to use for kubernetes-dashboard"
+  type        = "string"
+  default     = "gcr.io/google_containers/kubernetes-dashboard-amd64:v1.6.1"
 }

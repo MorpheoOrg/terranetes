@@ -45,6 +45,7 @@ write_files:
       PrintMotd no
       LogLevel DEBUG
       PermitRootLogin no
+${join("\n", var.bastion_extra_files)}
 
 users:
 ${join("\n", data.template_file.user.*.rendered)}

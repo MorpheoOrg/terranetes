@@ -51,9 +51,20 @@ variable "etcd_instance_count" {
   default     = 3
 }
 
+variable "etcd_disk_size" {
+  description = "Disk size on etcd nodes."
+  default     = 16
+}
+
 variable "etcd_asg_health_check_type" {
   description = "\"EC2\" or \"ELB\". If ELB is chosen, nodes with an unhealthy etcd instance will be killed"
   default     = "EC2"
+  type        = "string"
+}
+
+variable "etcd_asg_health_check_grace_period" {
+  description = "Health check grace period for etcd nodes"
+  default     = "300"
   type        = "string"
 }
 

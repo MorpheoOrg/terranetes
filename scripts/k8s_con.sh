@@ -17,7 +17,7 @@ SSH_PORT="$3"
 AWS_REGION="$4"
 BASTION_INSTANCE_NAME="$5"
 CLUSTER_NAME="$6"
-INTERNAL_DOMAIN="$6"
+INTERNAL_DOMAIN="$7"
 
 # STEP 1: finding out who the bastion is
 ip_address=$(aws ec2 describe-instances \

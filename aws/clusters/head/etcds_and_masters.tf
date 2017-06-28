@@ -43,6 +43,7 @@ module "foundations" {
   cloud_config_bucket = "${var.cloud_config_bucket}"
   internal_domain     = "${var.internal_domain}"
   bastion_extra_units = ["${var.bastion_extra_units}"]
+  bastion_extra_files = ["${var.bastion_extra_files}"]
 }
 
 module "etcd_cluster" {
@@ -51,26 +52,32 @@ module "etcd_cluster" {
   vpc_name                 = "${var.vpc_name}"
   vpc_number               = "${var.vpc_number}"
   vpc_region               = "${var.vpc_region}"
-  cluster_name             = "${var.cluster_name}"
-  coreos_ami_id            = "${module.foundations.coreos_ami_id}"
-  cloud_config_bucket      = "${module.foundations.cloud_config_bucket}"
-  etcd_version             = "${var.etcd_version}"
-  etcd_instance_type       = "${var.etcd_instance_type}"
-  etcd_instance_count      = "${var.etcd_instance_count}"
   sg_vpn_id                = "${module.foundations.sg_vpn_id}"
-  etcd_iam_role_name       = "${module.foundations.etcd_iam_role_name}"
-  etcd_iam_profile_arn     = "${module.foundations.etcd_iam_profile_arn}"
+  cluster_name             = "${var.cluster_name}"
+  internal_domain          = "${var.internal_domain}"
+  cloud_config_bucket      = "${module.foundations.cloud_config_bucket}"
   route53_internal_zone_id = "${module.foundations.route53_internal_zone_id}"
   bastion_ip               = "${module.foundations.bastion_ip}"
   bastion_ssh_port         = "${var.bastion_ssh_port}"
   terraform_ssh_key_path   = "${var.terraform_ssh_key_path}"
-  cloud_config_bucket      = "${module.foundations.cloud_config_bucket}"
   private_subnet_ids       = "${module.foundations.private_subnet_ids}"
-  internal_domain          = "${var.internal_domain}"
-  usernames                = ["${var.usernames}"]
-  userkeys                 = ["${var.userkeys}"]
-  extra_units              = ["${var.etcd_extra_units}"]
-  extra_files              = ["${var.etcd_extra_files}"]
+
+  coreos_ami_id = "${module.foundations.coreos_ami_id}"
+
+  etcd_version                       = "${var.etcd_version}"
+  etcd_instance_type                 = "${var.etcd_instance_type}"
+  etcd_disk_size                     = "${var.etcd_disk_size}"
+  etcd_instance_count                = "${var.etcd_instance_count}"
+  etcd_iam_role_name                 = "${module.foundations.etcd_iam_role_name}"
+  etcd_iam_profile_arn               = "${module.foundations.etcd_iam_profile_arn}"
+  etcd_asg_health_check_type         = "${var.etcd_asg_health_check_type}"
+  etcd_asg_health_check_grace_period = "${var.etcd_asg_health_check_grace_period}"
+
+  usernames = ["${var.usernames}"]
+  userkeys  = ["${var.userkeys}"]
+
+  extra_units = ["${var.etcd_extra_units}"]
+  extra_files = ["${var.etcd_extra_files}"]
 }
 
 module "k8s_master_cluster" {
@@ -103,6 +110,8 @@ module "k8s_master_cluster" {
   internal_domain                          = "${var.internal_domain}"
   usernames                                = ["${var.usernames}"]
   userkeys                                 = ["${var.userkeys}"]
+  extra_units                              = ["${var.k8s_master_extra_units}"]
+  extra_files                              = ["${var.k8s_master_extra_files}"]
 
   # TLS assets
   k8s_tls_cakey   = "${var.k8s_tls_cakey}"

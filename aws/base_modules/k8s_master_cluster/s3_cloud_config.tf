@@ -27,10 +27,10 @@ ${data.template_file.flannel.rendered}
   units:
 ${data.template_file.flannel_units.rendered}
 ${data.template_file.kubelet_master_units.rendered}
-
+${join("\n", var.extra_units)}
 write_files:
 ${data.template_file.k8s_master_files.rendered}
-
+${join("\n", var.extra_files)}
 users:
 ${join("\n", data.template_file.user.*.rendered)}
 EOF

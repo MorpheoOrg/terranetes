@@ -153,6 +153,18 @@ variable "k8s_tls_apicert" {
   type        = "string"
 }
 
+variable "extra_units" {
+  description = "Extra unit files (don't forget the 4-space indentation) to run on the master hosts"
+  type        = "list"
+  default     = []
+}
+
+variable "extra_files" {
+  description = "Extra files (don't forget the 4-space indentation) to put on the master hosts"
+  type        = "list"
+  default     = []
+}
+
 variable "dependency_hooks" {
   description = "A list of resource ids this module's autoscaling group depends on."
   type        = "string"

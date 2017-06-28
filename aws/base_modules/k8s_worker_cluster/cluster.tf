@@ -17,6 +17,8 @@
  */
 
 resource "aws_autoscaling_group" "k8s_worker_group" {
+  count = "${var.enable}"
+
   name                 = "${var.worker_group_name}-${var.cluster_name}"
   vpc_zone_identifier  = ["${var.private_subnet_ids}"]
   launch_configuration = "${aws_launch_configuration.k8s_worker.name}"
@@ -67,6 +69,8 @@ EOF
 }
 
 resource "aws_launch_configuration" "k8s_worker" {
+  count = "${var.enable}"
+
   name_prefix   = "${var.worker_group_name}-${var.cluster_name}-"
   image_id      = "${var.coreos_ami_id}"
   instance_type = "${var.node_instance_type}"

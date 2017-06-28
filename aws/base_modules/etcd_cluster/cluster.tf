@@ -58,7 +58,7 @@ resource "aws_autoscaling_group" "etcd" {
   min_size = "${var.etcd_instance_count}"
 
   health_check_type         = "${var.etcd_asg_health_check_type}"
-  health_check_grace_period = "300"
+  health_check_grace_period = "${var.etcd_asg_health_check_grace_period}"
   default_cooldown          = "30"
 
   termination_policies = ["OldestLaunchConfiguration", "ClosestToNextInstanceHour"]
@@ -97,7 +97,7 @@ resource "aws_launch_configuration" "etcd" {
   root_block_device {
     volume_type = "gp2"
 
-    volume_size           = 8
+    volume_size           = "${var.etcd_disk_size}"
     delete_on_termination = true
   }
 
