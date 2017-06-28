@@ -7,8 +7,6 @@ TERRAFORM_KEYFILE="$3"
 CLUSTER_NAME="$4"
 INTERNAL_DOMAIN="$5"
 
-echo " ((((())))) Waiting for the Kubernetes master cluster to be available..."
-
 echo " ((((())))) Configuring local kubectl to talk to the APIServer..."
 set +e
 killall ssh
@@ -25,7 +23,7 @@ kubectl config use-context "$CLUSTER_NAME-default-system"
 
 
 # Spawns our kubernetes manifests :)
-echo "Spawing/updating Kubernetes manifests..."
+echo "Deleting Kubernetes manifests..."
 set +e
 i=6
 while [[ ! -z "${!i}" ]]; do
