@@ -19,7 +19,7 @@
 resource "aws_autoscaling_group" "k8s_worker_group" {
   count = "${var.enable}"
 
-  name                 = "${var.worker_group_name}-${var.cluster_name}"
+  name                 = "${var.cluster_name}-${var.worker_group_name}"
   vpc_zone_identifier  = ["${var.private_subnet_ids}"]
   launch_configuration = "${aws_launch_configuration.k8s_worker.name}"
 
@@ -61,9 +61,10 @@ resource "aws_autoscaling_group" "k8s_worker_group" {
   provisioner "local-exec" {
     command = <<EOF
       ${path.module}/scripts/apply_manifests.sh \
-      ${var.bastion_ip} ${var.bastion_ssh_port} ${var.terraform_ssh_key_path} \
-      ${var.cluster_name} ${var.internal_domain} \
-      ${join(" ", formatlist("\"%s\"", var.kubernetes_manifests))}
+      "${path.module}/../k8s_master_cluster/scripts/k8s_con.sh" \
+      ${var.bastion_ssh_port} ${var.terraform_ssh_key_path} \
+      ${var.cluster_name} ${var.internal_domain} bastion ${var.vpc_region} \
+      ${join(" ", formatlist("\"%s\"", var.kubernetes_manifests_to_deploy))}
 EOF
   }
 
@@ -74,9 +75,10 @@ EOF
 
     command = <<EOF
       ${path.module}/scripts/delete_manifests.sh \
-      ${var.bastion_ip} ${var.bastion_ssh_port} ${var.terraform_ssh_key_path} \
-      ${var.cluster_name} ${var.internal_domain} \
-      ${join(" ", formatlist("\"%s\"", var.kubernetes_manifests))}
+      "${path.module}/../k8s_master_cluster/scripts/k8s_con.sh" \
+      ${var.bastion_ssh_port} ${var.terraform_ssh_key_path} \
+      ${var.cluster_name} ${var.internal_domain} bastion ${var.vpc_region} \
+      ${join(" ", formatlist("\"%s\"", var.all_kubernetes_manifests))}
 EOF
   }
 }
@@ -84,7 +86,7 @@ EOF
 resource "aws_launch_configuration" "k8s_worker" {
   count = "${var.enable}"
 
-  name_prefix   = "${var.worker_group_name}-${var.cluster_name}-"
+  name_prefix   = "${var.cluster_name}-${var.worker_group_name}-"
   image_id      = "${var.coreos_ami_id}"
   instance_type = "${var.node_instance_type}"
 

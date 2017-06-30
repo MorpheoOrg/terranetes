@@ -1,0 +1,1 @@
+  ${ingress_port}: "${namespace}/${service}:${service_port}"

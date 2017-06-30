@@ -19,10 +19,6 @@ output "cloud_config_bucket" {
   value = "${module.k8s_head.cloud_config_bucket}"
 }
 
-output "bastion_ip" {
-  value = "${module.k8s_head.bastion_ip}"
-}
-
 output "etcd_endpoint" {
   value = "${module.k8s_head.etcd_endpoint}"
 }

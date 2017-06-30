@@ -8,8 +8,6 @@
  */
 
 resource "aws_s3_bucket_object" "k8s_public_workers_cloud_configs" {
-  count = "${var.enable}"
-
   bucket = "${var.cloud_config_bucket}"
   key    = "${var.cluster_name}/k8s_worker_${var.worker_group_name}.yml"
 

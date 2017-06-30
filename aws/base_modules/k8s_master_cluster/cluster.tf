@@ -17,7 +17,7 @@
 
 resource "aws_elb" "k8s_master" {
   cross_zone_load_balancing = true
-  name                      = "k8s-master-${var.cluster_name}"
+  name                      = "${var.cluster_name}-k8s-master"
   security_groups           = ["${var.sg_vpn_id}"]
   subnets                   = ["${var.private_subnet_ids}"]
   internal                  = true
@@ -38,11 +38,11 @@ resource "aws_elb" "k8s_master" {
     interval = 30
   }
 
-  idle_timeout = 60
+  idle_timeout = 1200
 }
 
 resource "aws_autoscaling_group" "k8s_masters" {
-  name                 = "k8s-masters-${var.cluster_name}"
+  name                 = "${var.cluster_name}-k8s-masters"
   vpc_zone_identifier  = ["${var.private_subnet_ids}"]
   launch_configuration = "${aws_launch_configuration.k8s_master.name}"
 
@@ -85,12 +85,12 @@ resource "aws_autoscaling_group" "k8s_masters" {
   # This provisioner script simply waits for the Kubernetes master to be
   # healthy and respond to kubectl commands
   provisioner "local-exec" {
-    command = "${path.module}/resources/wait_for_health.sh ${var.bastion_ip} ${var.bastion_ssh_port} ${var.terraform_ssh_key_path} ${var.cluster_name} ${var.internal_domain}"
+    command = "${path.module}/scripts/wait_for_health.sh ${var.bastion_ip} ${var.bastion_ssh_port} ${var.terraform_ssh_key_path} ${var.cluster_name} ${var.internal_domain}"
   }
 }
 
 resource "aws_launch_configuration" "k8s_master" {
-  name_prefix   = "k8s-master-${var.cluster_name}-"
+  name_prefix   = "${var.cluster_name}-k8s-master-"
   image_id      = "${var.coreos_ami_id}"
   instance_type = "${var.k8s_master_instance_type}"
 

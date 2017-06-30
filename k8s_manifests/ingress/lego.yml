@@ -1,0 +1,37 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: lego
+  namespace: ingress
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: lego
+    spec:
+      nodeSelector:
+        role.node: ingress
+      containers:
+      - name: kube-lego
+        image: '${lego_image}'
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: LEGO_EMAIL
+          value: '${lego_email}'
+        - name: LEGO_URL
+          value: '${acme_url}'
+        - name: LEGO_NAMESPACE
+          value: ingress
+        - name: LEGO_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 1

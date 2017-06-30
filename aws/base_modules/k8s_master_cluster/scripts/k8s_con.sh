@@ -19,6 +19,8 @@ BASTION_INSTANCE_NAME="$5"
 CLUSTER_NAME="$6"
 INTERNAL_DOMAIN="$7"
 
+set -e
+
 # STEP 1: finding out who the bastion is
 ip_address=$(aws ec2 describe-instances \
     --region "$AWS_REGION" \
@@ -30,7 +32,9 @@ ip_address=$(sed 's/"//g' <<< "$ip_address")
 echo "Bastion IP is: $ip_address"
 
 echo "Killing all currently ssh sessions for user $USER. Sorry :p..."
+set +e
 killall ssh
+set -e
 
 echo "Creating SSH tunnels to our AWS bastions in region $AWS_REGION..."
 

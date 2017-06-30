@@ -1,0 +1,186 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: ingress
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: nginx-ingress-controller
+  namespace: ingress
+data:
+  proxy-body-size: '0'
+  enable-vts-status: 'true'
+  gzip-types: '*'
+  hsts: 'true'
+  hsts-max-age: '100000'
+  hsts-include-subdomains: 'false'
+  max-worker-connections: '1024'
+  proxy-connect-timeout: '15'
+  proxy-read-timeout: '60'
+  proxy-send-timeout: '60'
+  retry-non-idempotent: 'true'
+  ssl-ciphers: 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS'
+  # ssl-dh-param: TODO: set this for better forward secrecy
+  server-name-hash-bucket-size: '256'
+  ssl-protocols: 'TLSv1 TLSv1.1 TLSv1.2'
+  ssl-redirect: 'true'
+  upstream-fail-timeout: '5'
+  upstream-max-fails: '3'
+  use-gzip: 'true'
+  use-http2: 'true'
+  use-proxy-protocol: 'true'
+  worker-processes: 'auto'
+---
+# Pure TCP forwarding configuration for OpenVPN
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-tcp-ingress-configmap
+  namespace: ingress
+data:
+${extra_tcp_config}
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: nginx-ingress-controller
+  namespace: ingress
+  labels:
+    app: nginx-ingress-controller
+    component: nginx
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  replicas: ${replicas}
+  template:
+    metadata:
+      labels:
+        app: nginx-ingress-controller
+        component: nginx
+    spec:
+      nodeSelector:
+        role.node: ingress
+      terminationGracePeriodSeconds: 60
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - nginx-ingress-controller
+                - key: component
+                  operator: In
+                  values:
+                  - nginx
+      containers:
+      - image: '${ingress_controller_image}'
+        name: ingress-nginx
+        imagePullPolicy: Always
+        ports:
+          - name: http
+            containerPort: 80
+            hostPort: 80
+            protocol: TCP
+          - name: https
+            containerPort: 443
+            hostPort: 443
+            protocol: TCP
+${extra_tcp_ports}
+          - name: nginx-status
+            containerPort: 18080
+            protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        args:
+        - /nginx-ingress-controller
+        - --default-backend-service=ingress/default-http-backend
+        - --configmap=ingress/nginx-ingress-controller
+        - --tcp-services-configmap=ingress/nginx-tcp-ingress-configmap
+        - --ingress-class
+        - nginx
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: default-http-backend
+  namespace: ingress
+  labels:
+    app: nginx-ingress-controller
+    component: default-404-backend
+spec:
+  ports:
+  - port: 80
+    targetPort: http
+  selector:
+    app: nginx-ingress-controller
+    component: default-404-backend
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: default-http-backend
+  namespace: ingress
+  labels:
+    app: nginx-ingress-controller
+    component: default-404-backend
+spec:
+  replicas: 2 # Eheheh, you said highly available right ? :D
+  template:
+    metadata:
+      labels:
+        app: nginx-ingress-controller
+        component: default-404-backend
+    spec:
+      nodeSelector:
+        role.node: ingress
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: default-http-backend
+        image: '${default_backend_image}'
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 10m
+            memory: 20Mi
+          requests:
+            cpu: 10m
+            memory: 20Mi
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP

@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: rescheduler
+  namespace: kube-system
+  labels:
+    app: rescheduler
+    kubernetes.io/cluster-service: 'true'
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: rescheduler
+      kubernetes.io/cluster-service: 'true'
+  template:
+    metadata:
+      name: rescheduler
+      namespace: kube-system
+      labels:
+        app: rescheduler
+        kubernetes.io/cluster-service: 'true'
+        kubernetes.io/name: 'Rescheduler'
+    spec:
+      hostNetwork: true
+      containers:
+      - image: '${rescheduler_image}'
+        name: rescheduler
+        resources:
+          limits:
+            memory: 100Mi
+          requests:
+            cpu: 10m
+            memory: 100Mi
+        command:
+        - '/rescheduler'
+        args:
+        - '--running-in-cluster=true'
+      nodeSelector:
+        role.node: system
+      restartPolicy: Always

@@ -226,10 +226,6 @@ output "cloud_config_bucket" {
   value = "${module.foundations.cloud_config_bucket}"
 }
 
-output "bastion_ip" {
-  value = "${module.foundations.bastion_ip}"
-}
-
 output "etcd_endpoint" {
   value = "${module.etcd_cluster.etcd_endpoint}"
 }

@@ -1,0 +1,117 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: openvpn
+  namespace: ingress
+  labels:
+    app: openvpn
+spec:
+  ports:
+    - name: ssl
+      port: ${port}
+      targetPort: ssl
+      protocol: TCP
+  selector:
+    app: openvpn
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: openvpn-tls-assets
+  namespace: ingress
+type: Opaque
+data:
+  ca.crt:
+  dh.pem:
+  server.key:
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: openvpn-client-certs
+  namespace: ingress
+type: Opaque
+data:
+  server.crt:
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: openvpn
+  namespace: ingress
+  labels:
+    app: openvpn
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: openvpn
+    spec:
+      nodeSelector:
+        role.node: ingress
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: openvpn
+        image: ${image}
+        imagePullPolicy: Always
+        env:
+        - name: K8S_SECRET_NAMESPACE
+          value: ingress
+        - name: SERVER_TLS_SECRET
+          value: openvpn-tls-assets
+        - name: CLIENT_CERTS_SECRET
+          value: openvpn-client-certs
+        - name: OVPN_PROTO
+          value: tcp
+        - name: OVPN_NETWORK
+          value: ${vpn_network}
+        - name: OVPN_SUBNET
+          value: ${vpn_subnet}
+        - name: OVPN_PORT
+          value: '${port}'
+        - name: OVPN_K8S_POD_NETWORK
+          value: ${pod_network}
+        - name: OVPN_K8S_POD_SUBNET
+          value: ${pod_subnet}
+        - name: OVPN_EXTERNAL_ENDPOINT
+          value: ${vpn_endpoint}
+        volumeMounts:
+        - mountPath: /init_certs/pki/ca.crt
+          name: tls-assets
+          subPath: ca.crt
+        - mountPath: /init_certs/pki/dh.pem
+          name: tls-assets
+          subPath: dh.pem
+        - mountPath: /init_certs/pki/private/server.key
+          name: tls-assets
+          subPath: server.key
+        - mountPath: /init_certs/pki/issued
+          name: client-certs
+        ports:
+        - containerPort: ${port}
+          name: openvpn
+          protocol: TCP
+          name: ssl
+        securityContext:
+          capabilities:
+            add:
+              - NET_ADMIN
+        resources:
+          requests:
+            cpu: 300m
+            memory: 256Mi
+          limits:
+            memory: 256Mi
+      volumes:
+      - name: tls-assets
+        secret:
+          secretName: openvpn-tls-assets
+      - name: client-certs
+        secret:
+          secretName: openvpn-client-certs

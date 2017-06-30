@@ -1,0 +1,1 @@
+        - --nodes=${min_size}:${max_size}:${asg_name}

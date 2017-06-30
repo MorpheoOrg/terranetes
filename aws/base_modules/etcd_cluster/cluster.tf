@@ -16,7 +16,7 @@
 
 resource "aws_elb" "etcd" {
   cross_zone_load_balancing = true
-  name                      = "etcd-${var.cluster_name}"
+  name                      = "${var.cluster_name}-etcd"
   security_groups           = ["${var.sg_vpn_id}"]
   subnets                   = ["${var.private_subnet_ids}"]
   internal                  = true
@@ -47,7 +47,7 @@ resource "aws_elb" "etcd" {
 }
 
 resource "aws_autoscaling_group" "etcd" {
-  name = "etcd-${var.cluster_name}"
+  name = "${var.cluster_name}-etcd"
 
   vpc_zone_identifier  = ["${var.private_subnet_ids}"]
   launch_configuration = "${aws_launch_configuration.etcd.name}"
@@ -82,7 +82,7 @@ resource "aws_autoscaling_group" "etcd" {
 }
 
 resource "aws_launch_configuration" "etcd" {
-  name_prefix   = "etcd-${var.cluster_name}-"
+  name_prefix   = "${var.cluster_name}-etcd-"
   image_id      = "${var.coreos_ami_id}"
   instance_type = "${var.etcd_instance_type}"
 

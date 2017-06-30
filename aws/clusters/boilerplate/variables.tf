@@ -156,6 +156,7 @@ variable "etcd_extra_files" {
 variable "hyperkube_tag" {
   description = "The version of Hyperkube to use (should be a valid tag of the official CoreOS image for Kubelet, see here: https://quay.io/repository/coreos/hyperkube?tab=tags)."
   type        = "string"
+  default     = "v1.6.6_coreos.1"
 }
 
 variable "k8s_master_instance_type" {
@@ -225,7 +226,22 @@ variable "k8s_master_extra_files" {
  */
 variable "flavors" {
   default = {
-    "system" = "1"
+    "system" = [
+      # Min ASG size for system nodes
+      "1",
+
+      # Max ASG size for system nodes
+      "5",
+
+      # List of Kubernetes components to deploy on this flavor (default: all available components)
+      "cluster_autoscaler,dns,dns_autoscaler,dashboard,heapster,node_problem_detector,rescheduler",
+    ]
+
+    "ingress" = [
+      "1",
+      "5",
+      "nginx-ingress-controller,lego",
+    ]
   }
 }
 
@@ -235,25 +251,13 @@ variable "flavors" {
 variable "system_node_instance_type" {
   description = "The type of instance to use for system nodes"
   type        = "string"
-  default     = "t2.micro"
-}
-
-variable "system_node_min_asg_size" {
-  description = "The minimum size of the system ASG"
-  type        = "string"
-  default     = "2"
-}
-
-variable "system_node_max_asg_size" {
-  description = "The maximum size of the system ASG"
-  type        = "string"
-  default     = "4"
+  default     = "t2.small"
 }
 
 variable "system_node_disk_size" {
   description = "The system nodes' disk size in GB"
   type        = "string"
-  default     = "4"
+  default     = "16"
 }
 
 variable "system_node_extra_units" {
@@ -268,10 +272,10 @@ variable "system_node_extra_files" {
   default     = []
 }
 
-variable "kube_system_flavors" {
-  description = "A list of kubernetes components to deploy on this node (available: dns, dashboard)"
-  type        = "list"
-  default     = ["cluster_autoscaler", "dns", "dashboard", "heapster", "node_problem_detector", "rescheduler"]
+variable "cluster_autoscaler_image" {
+  description = "Docker image to use for Kubernetes' cluster autoscaler"
+  type        = "string"
+  default     = "gcr.io/google-containers/cluster-autoscaler:v0.6.0"
 }
 
 variable "kube_dns_replicas" {
@@ -304,8 +308,125 @@ variable "kube_dns_exechealthz_image" {
   default     = "gcr.io/google_containers/exechealthz-amd64:1.2"
 }
 
+variable "cluster_proportional_autoscaler_image" {
+  description = "Cluster proportional autoscaler image to use for kube-dns-autoscaler"
+  type        = "string"
+  default     = "gcr.io/google_containers/cluster-proportional-autoscaler-amd64:1.1.2"
+}
+
 variable "kube_dashboard_image" {
   description = "Docker image to use for kubernetes-dashboard"
   type        = "string"
   default     = "gcr.io/google_containers/kubernetes-dashboard-amd64:v1.6.1"
+}
+
+variable "heapster_image" {
+  description = "Docker image to use for heapster"
+  type        = "string"
+  default     = "gcr.io/google_containers/heapster:v1.3.0"
+}
+
+variable "addon_resizer_image" {
+  description = "Docker image to use for Heapster's add-on resizer"
+  type        = "string"
+  default     = "gcr.io/google_containers/addon-resizer:1.6"
+}
+
+variable "node_problem_detector_image" {
+  description = "Image to use for the node problem detector"
+  type        = "string"
+  default     = "gcr.io/google_containers/node-problem-detector:v0.3.0"
+}
+
+variable "rescheduler_image" {
+  description = "Image to use for Kubernetes' rescheduler"
+  type        = "string"
+  default     = "gcr.io/google_containers/rescheduler:v0.3.0"
+}
+
+/*
+ * Ingress nodes
+ */
+variable "ingress_node_instance_type" {
+  description = "The type of instance to use for ingress nodes"
+  type        = "string"
+  default     = "t2.micro"
+}
+
+variable "ingress_node_disk_size" {
+  description = "The ingress nodes' disk size in GB"
+  type        = "string"
+  default     = "16"
+}
+
+variable "ingress_node_extra_units" {
+  description = "Extra systemd units to put on system nodes (Cloud Config format, add 4 space indentation)"
+  type        = "list"
+  default     = []
+}
+
+variable "ingress_node_extra_files" {
+  description = "Extra files to put on ingress nodes (Cloud Config format, add 4 space indentation)"
+  type        = "list"
+  default     = []
+}
+
+variable "ingress_controller_replicas" {
+  description = "Number of replicas (=number of nodes) of our ingress controller to be run"
+  type        = "string"
+  default     = "1"
+}
+
+variable "ingress_controller_image" {
+  description = "Image to use for the ingress controller (for now, only nginx is supported)"
+  type        = "string"
+  default     = "gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.8"
+}
+
+variable "ingress_default_backend_image" {
+  description = "Image to use for the default backend of the ingress controller"
+  type        = "string"
+  default     = "gcr.io/google_containers/defaultbackend:1.0"
+}
+
+variable "openvpn_image" {
+  description = "The kube-openvpn image to use"
+  type        = "string"
+  default     = "terranetes/openvpn:latest"
+}
+
+variable "vpn_port" {
+  description = "The port to use to connect to OpenVPN through the Ingress controller"
+  type        = "string"
+  default     = "4242"
+}
+
+variable "vpn_network" {
+  description = "Network for OpenVPN clients"
+  type        = "string"
+  default     = "10.240.0.0"
+}
+
+variable "vpn_subnet" {
+  description = "Subnet mask for OpenVPN clients' network"
+  type        = "string"
+  default     = "255.255.0.0"
+}
+
+variable "lego_image" {
+  description = "Image to use for kube-lego (Let's Encrypt client for our ingress controller)"
+  type        = "string"
+  default     = "jetstack/kube-lego:0.1.4"
+}
+
+variable "lego_email" {
+  description = "Email address to use for Let's Encrypt"
+  type        = "string"
+  default     = ""
+}
+
+variable "acme_url" {
+  description = "ACME Server URL (defaults to Let's Encrypt staging server)"
+  type        = "string"
+  default     = "https://acme-staging.api.letsencrypt.org/directory"
 }
