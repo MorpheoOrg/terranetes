@@ -1,6 +1,23 @@
 TerraNetes
 ==========
 
+DEPRECATION NOTICE
+------------------
+
+This repository has been deprecated in favor of [karch](https://github.com/elafarge/karch),
+a Terraform module that wraps `kops`, the official tool to deploy and manage
+Kuberenetes clusters on AWS. It isn't as opinionated as Terranetes:
+ * One can deploy multiple cluster topology
+ * One can choose its distribution
+ * ...
+
+In addition you have all the power of `kops` to roll upgrade your cluster, the
+`etcd` deployment is (almost) guaranteed to be resilients, events and Kubernetes
+state are stored in distinct etcd containers, therefore, an event spawn won't
+threaten the health of your Kubernetes clusters, configuring RBAC is possible...
+
+This repository won't be maintained anymore. Use it at your own risk.
+
 TL;DR
 -----
 Deploy a self-managed, production-grade Kubernetes-on-top-of-Container-Linux
